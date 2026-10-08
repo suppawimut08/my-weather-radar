@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1220" />
-  <title>Thailand Weather Radar Dashboard</title>
+  <title>Thailand Weather Radar & Satellite</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -219,10 +219,10 @@
       flex: 0 0 auto;
     }
 
+    .swatch-radar { background: linear-gradient(90deg,#00a3e0,#005588,#ffee00,#ff4400,#c10000,#ffafff); }
+    .swatch-sat { background: linear-gradient(135deg, #cbd5e1 0%, #334155 100%); }
     .swatch-province { background: rgba(255, 193, 7, .10); border: 2px solid #f59e0b; }
     .swatch-district { background: rgba(148, 163, 184, .08); border: 1px dashed #94a3b8; }
-    .swatch-river { background: #38bdf8; border-color: #38bdf8; height: 4px; margin-top: 1px; }
-    .swatch-radar { background: linear-gradient(90deg,#00a3e0,#005588,#ffee00,#ff4400,#c10000,#ffafff); }
 
     .layer-text strong { display: block; font-size: 11px; }
     .layer-text span { display: block; color: var(--muted); font-size: 9px; margin-top: 1px; }
@@ -369,17 +369,6 @@
       outline: 2px solid rgba(56,189,248,.28);
     }
 
-    .credits {
-      position: fixed;
-      z-index: 1100;
-      right: 12px;
-      bottom: 13px;
-      transform: translateY(100%);
-      opacity: 0;
-      pointer-events: none;
-      font-size: 9px;
-    }
-
     .loading {
       position: fixed;
       inset: 0;
@@ -415,17 +404,9 @@
     .leaflet-control-attribution { font-size: 8px !important; }
 
     .province-tooltip,
-    .district-tooltip,
-    .river-tooltip {
+    .district-tooltip {
       font-weight: 700;
       font-size: 11px;
-    }
-
-    .selected-province {
-      stroke: #ffffff !important;
-      stroke-width: 3 !important;
-      fill: #38bdf8 !important;
-      fill-opacity: .13 !important;
     }
 
     @media (max-width: 780px) {
@@ -471,7 +452,7 @@
   <div class="topbar">
     <div class="brand ui-card">
       <div class="brand-title">🌧 Thailand Weather Radar</div>
-      <div class="brand-subtitle">Rain radar • Administrative boundaries • Major waterways</div>
+      <div class="brand-subtitle">Rain radar • Satellite • Boundaries</div>
     </div>
 
     <div class="status-card ui-card">
@@ -516,6 +497,14 @@
 
     <div class="layer-row">
       <div class="layer-info">
+        <div class="swatch swatch-sat"></div>
+        <div class="layer-text"><strong>ดาวเทียม IR (Satellite)</strong><span>ภาพถ่ายดาวเทียมอินฟราเรด</span></div>
+      </div>
+      <label class="toggle"><input id="satToggle" type="checkbox"><span class="slider"></span></label>
+    </div>
+
+    <div class="layer-row">
+      <div class="layer-info">
         <div class="swatch swatch-province"></div>
         <div class="layer-text"><strong>ขอบเขตจังหวัด</strong><span>77 จังหวัด</span></div>
       </div>
@@ -530,20 +519,12 @@
       <label class="toggle"><input id="districtToggle" type="checkbox"><span class="slider"></span></label>
     </div>
 
-    <div class="layer-row">
-      <div class="layer-info">
-        <div class="swatch swatch-river"></div>
-        <div class="layer-text"><strong>เส้นทางน้ำสำคัญ</strong><span>Major river / drainage lines</span></div>
-      </div>
-      <label class="toggle"><input id="riverToggle" type="checkbox" checked><span class="slider"></span></label>
-    </div>
-
     <div class="divider"></div>
 
-    <div class="section-title">Radar Controls</div>
+    <div class="section-title">Radar / Sat Controls</div>
     <div class="radar-controls">
       <div class="control-row">
-        <button id="playBtn" class="primary">▶ เล่น Radar</button>
+        <button id="playBtn" class="primary">▶ เล่นภาพเคลื่อนไหว</button>
         <button id="refreshBtn">↻ รีเฟรช</button>
         <button id="homeBtn">⌂ ไทย</button>
       </div>
@@ -552,7 +533,7 @@
       <div class="time-small" id="currentDate">--</div>
 
       <div class="field">
-        <label><span>ความโปร่งใส Radar</span><span id="opacityValue">72%</span></label>
+        <label><span>ความโปร่งใส (Opacity)</span><span id="opacityValue">72%</span></label>
         <input id="opacitySlider" type="range" min="0" max="100" value="72" />
       </div>
 
@@ -571,7 +552,7 @@
 
   <section class="timeline-card ui-card">
     <div class="timeline-head">
-      <strong>Radar Timeline</strong>
+      <strong>Timeline</strong>
       <span id="timelineMeta" class="timeline-meta">กำลังโหลด...</span>
     </div>
     <div id="timeline" class="timeline"></div>
@@ -593,15 +574,14 @@
       radarApi: "https://api.rainviewer.com/public/weather-maps.json",
       radarColor: 2,
       radarOptions: "1_0",
+      satColor: 0,
+      satOptions: "1_0",
       maxRadarZoom: 7,
-      radarOpacity: 0.72,
+      layerOpacity: 0.72,
       refreshMs: 5 * 60 * 1000,
 
-      // Public GeoJSON sources. Data are loaded client-side, so the repository itself
-      // remains lightweight and can deploy as a static site on GitHub/Vercel.
       provinceGeoJsonUrl: "https://cdn.jsdelivr.net/gh/knottx/opengisdata-thailand@master/provinces.geojson",
-      districtGeoJsonUrl: "https://cdn.jsdelivr.net/gh/knottx/opengisdata-thailand@master/districts.geojson",
-      riverGeoJsonUrl: "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_50m_rivers_lake_centerlines.geojson"
+      districtGeoJsonUrl: "https://cdn.jsdelivr.net/gh/knottx/opengisdata-thailand@master/districts.geojson"
     };
 
     const QUICK_PLACES = {
@@ -634,9 +614,9 @@
       provinceSelect: document.getElementById("provinceSelect"),
       provinceGoBtn: document.getElementById("provinceGoBtn"),
       radarToggle: document.getElementById("radarToggle"),
+      satToggle: document.getElementById("satToggle"),
       provinceToggle: document.getElementById("provinceToggle"),
       districtToggle: document.getElementById("districtToggle"),
-      riverToggle: document.getElementById("riverToggle"),
       playBtn: document.getElementById("playBtn"),
       refreshBtn: document.getElementById("refreshBtn"),
       homeBtn: document.getElementById("homeBtn"),
@@ -656,21 +636,21 @@
     let radarHost = "";
     let radarFrames = [];
     let radarLayers = [];
+    let satFrames = [];
+    let satLayers = [];
+
     let selectedIndex = 0;
     let playing = false;
     let playTimer = null;
-    let radarRefreshTimer = null;
-    let radarOpacity = CONFIG.radarOpacity;
+    let refreshTimer = null;
+    let currentOpacity = CONFIG.layerOpacity;
 
     let provinceData = null;
     let districtData = null;
-    let riverData = null;
 
     let provinceLayer = null;
     let districtLayer = null;
-    let riverLayer = null;
     let selectedProvinceLayer = null;
-
     const provinceIndex = [];
 
     function setStatus(ok, title, detail) {
@@ -685,31 +665,22 @@
       el.loading.style.display = "grid";
     }
 
-    function hideLoading() {
-      el.loading.style.display = "none";
-    }
+    function hideLoading() { el.loading.style.display = "none"; }
 
     function thaiDate(unixSeconds) {
       return new Intl.DateTimeFormat("th-TH", {
-        dateStyle: "medium",
-        timeZone: "Asia/Bangkok"
+        dateStyle: "medium", timeZone: "Asia/Bangkok"
       }).format(new Date(unixSeconds * 1000));
     }
 
     function thaiTime(unixSeconds) {
       return new Intl.DateTimeFormat("th-TH", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Bangkok"
+        hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Bangkok"
       }).format(new Date(unixSeconds * 1000));
     }
 
     function normalizeText(value) {
-      return String(value ?? "")
-        .trim()
-        .toLocaleLowerCase("th-TH")
-        .replace(/\s+/g, "");
+      return String(value ?? "").trim().toLocaleLowerCase("th-TH").replace(/\s+/g, "");
     }
 
     function provinceProps(feature) {
@@ -731,45 +702,12 @@
       };
     }
 
-    function riverName(feature) {
-      const p = feature?.properties || {};
-      return p.name || p.name_en || p.NAME || p.namealt || "";
-    }
-
     function provinceStyle() {
-      return {
-        color: "#f59e0b",
-        weight: 1.8,
-        opacity: 0.92,
-        fillColor: "#f59e0b",
-        fillOpacity: 0.035
-      };
+      return { color: "#f59e0b", weight: 1.8, opacity: 0.92, fillColor: "#f59e0b", fillOpacity: 0.035 };
     }
 
     function districtStyle() {
-      return {
-        color: "#64748b",
-        weight: 0.7,
-        opacity: 0.65,
-        fillColor: "#94a3b8",
-        fillOpacity: 0.015,
-        dashArray: "3 4"
-      };
-    }
-
-    function riverStyle(feature) {
-      const rank = Number(feature?.properties?.scalerank ?? 10);
-      let weight = 1.1;
-      if (rank <= 2) weight = 3.0;
-      else if (rank <= 4) weight = 2.2;
-      else if (rank <= 6) weight = 1.6;
-      return {
-        color: "#0ea5e9",
-        weight,
-        opacity: 0.82,
-        lineCap: "round",
-        lineJoin: "round"
-      };
+      return { color: "#64748b", weight: 0.7, opacity: 0.65, fillColor: "#94a3b8", fillOpacity: 0.015, dashArray: "3 4" };
     }
 
     function clearSelectedProvince() {
@@ -782,22 +720,13 @@
     function selectProvinceFeature(layer) {
       clearSelectedProvince();
       selectedProvinceLayer = layer;
-      layer.setStyle({
-        color: "#ffffff",
-        weight: 3,
-        fillColor: "#38bdf8",
-        fillOpacity: 0.13
-      });
+      layer.setStyle({ color: "#ffffff", weight: 3, fillColor: "#38bdf8", fillOpacity: 0.13 });
       if (layer.bringToFront) layer.bringToFront();
     }
 
     function onEachProvince(feature, layer) {
       const p = provinceProps(feature);
-      layer.bindTooltip(`<div class="province-tooltip">${p.th || p.en}</div>`, {
-        sticky: true,
-        direction: "top",
-        opacity: 0.92
-      });
+      layer.bindTooltip(`<div class="province-tooltip">${p.th || p.en}</div>`, { sticky: true, direction: "top", opacity: 0.92 });
       layer.bindPopup(`<strong>${p.th || p.en}</strong><br><small>${p.en || ""}</small>`);
       layer.on("click", () => {
         selectProvinceFeature(layer);
@@ -809,23 +738,8 @@
     function onEachDistrict(feature, layer) {
       const p = districtProps(feature);
       if (p.th || p.en) {
-        layer.bindTooltip(`<div class="district-tooltip">${p.th || p.en}</div>`, {
-          sticky: true,
-          direction: "top",
-          opacity: 0.86
-        });
+        layer.bindTooltip(`<div class="district-tooltip">${p.th || p.en}</div>`, { sticky: true, direction: "top", opacity: 0.86 });
         layer.bindPopup(`<strong>${p.th || p.en}</strong><br><small>${p.provinceTh || p.provinceEn || ""}</small>`);
-      }
-    }
-
-    function onEachRiver(feature, layer) {
-      const name = riverName(feature);
-      if (name) {
-        layer.bindTooltip(`<div class="river-tooltip">${name}</div>`, {
-          sticky: true,
-          direction: "top",
-          opacity: 0.88
-        });
       }
     }
 
@@ -860,11 +774,7 @@
     async function loadProvinces() {
       try {
         provinceData = await loadGeoJson(CONFIG.provinceGeoJsonUrl);
-        provinceLayer = L.geoJSON(provinceData, {
-          style: provinceStyle,
-          onEachFeature: onEachProvince,
-          pane: "overlayPane"
-        });
+        provinceLayer = L.geoJSON(provinceData, { style: provinceStyle, onEachFeature: onEachProvince, pane: "overlayPane" });
         if (el.provinceToggle.checked) provinceLayer.addTo(map);
         populateProvinceDropdown(provinceData);
       } catch (error) {
@@ -879,68 +789,32 @@
         else if (map.hasLayer(districtLayer)) map.removeLayer(districtLayer);
         return;
       }
-
       el.districtToggle.disabled = true;
       try {
         districtData = await loadGeoJson(CONFIG.districtGeoJsonUrl);
-        districtLayer = L.geoJSON(districtData, {
-          style: districtStyle,
-          onEachFeature: onEachDistrict,
-          pane: "overlayPane"
-        });
+        districtLayer = L.geoJSON(districtData, { style: districtStyle, onEachFeature: onEachDistrict, pane: "overlayPane" });
         if (el.districtToggle.checked) districtLayer.addTo(map);
       } catch (error) {
-        console.error("District GeoJSON error", error);
-        setStatus(false, "โหลดขอบเขตอำเภอไม่สำเร็จ", "ตรวจสอบการเชื่อมต่อข้อมูล");
+        console.error("District error", error);
         el.districtToggle.checked = false;
-      } finally {
-        el.districtToggle.disabled = false;
-      }
-    }
-
-    async function loadRivers() {
-      try {
-        riverData = await loadGeoJson(CONFIG.riverGeoJsonUrl);
-        riverData.features = riverData.features.filter(feature => {
-          const p = feature?.properties || {};
-          const rank = Number(p.scalerank ?? 99);
-          const featureClass = String(p.featurecla || "River").toLowerCase();
-          return featureClass.includes("river") && rank <= 6;
-        });
-
-        riverLayer = L.geoJSON(riverData, {
-          style: riverStyle,
-          onEachFeature: onEachRiver,
-          pane: "overlayPane"
-        });
-
-        if (el.riverToggle.checked) riverLayer.addTo(map);
-      } catch (error) {
-        console.error("River GeoJSON error", error);
-        el.riverToggle.checked = false;
-      }
+      } finally { el.districtToggle.disabled = false; }
     }
 
     function buildRadarLayer(frame) {
       const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${CONFIG.radarColor}/${CONFIG.radarOptions}.png`;
-      return L.tileLayer(url, {
-        opacity: radarOpacity,
-        zIndex: 500,
-        tileSize: 256,
-        updateWhenIdle: true,
-        keepBuffer: 1,
-        noWrap: false,
-        maxNativeZoom: CONFIG.maxRadarZoom,
-        maxZoom: 11,
-        attribution: 'Weather data by <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>'
-      });
+      return L.tileLayer(url, { opacity: currentOpacity, zIndex: 500, tileSize: 256, maxNativeZoom: CONFIG.maxRadarZoom, maxZoom: 11 });
     }
 
-    function clearRadarLayers() {
-      radarLayers.forEach(layer => {
-        if (map.hasLayer(layer)) map.removeLayer(layer);
-      });
+    function buildSatLayer(frame) {
+      const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${CONFIG.satColor}/${CONFIG.satOptions}.png`;
+      return L.tileLayer(url, { opacity: currentOpacity, zIndex: 450, tileSize: 256, maxNativeZoom: CONFIG.maxRadarZoom, maxZoom: 11 });
+    }
+
+    function clearWeatherLayers() {
+      radarLayers.forEach(layer => { if (map.hasLayer(layer)) map.removeLayer(layer); });
+      satLayers.forEach(layer => { if (map.hasLayer(layer)) map.removeLayer(layer); });
       radarLayers = [];
+      satLayers = [];
     }
 
     function renderTimeline() {
@@ -957,9 +831,7 @@
     }
 
     function updateTimelineSelection() {
-      [...el.timeline.children].forEach((node, idx) => {
-        node.classList.toggle("selected", idx === selectedIndex);
-      });
+      [...el.timeline.children].forEach((node, idx) => { node.classList.toggle("selected", idx === selectedIndex); });
       const selected = radarFrames[selectedIndex];
       if (!selected) return;
       el.currentTime.textContent = thaiTime(selected.time);
@@ -969,12 +841,26 @@
     function selectFrame(index) {
       if (!radarFrames.length) return;
       selectedIndex = Math.max(0, Math.min(index, radarFrames.length - 1));
+      const targetTime = radarFrames[selectedIndex].time;
+
+      // หารูปภาพดาวเทียมที่เวลาใกล้เคียงกับเรดาร์มากที่สุด
+      let bestSatIdx = 0;
+      let minDiff = Infinity;
+      satFrames.forEach((sf, i) => {
+        const diff = Math.abs(sf.time - targetTime);
+        if (diff < minDiff) { minDiff = diff; bestSatIdx = i; }
+      });
 
       radarLayers.forEach((layer, idx) => {
         const shouldShow = idx === selectedIndex && el.radarToggle.checked;
-        const visible = map.hasLayer(layer);
-        if (shouldShow && !visible) layer.addTo(map);
-        if (!shouldShow && visible) map.removeLayer(layer);
+        if (shouldShow && !map.hasLayer(layer)) layer.addTo(map);
+        if (!shouldShow && map.hasLayer(layer)) map.removeLayer(layer);
+      });
+
+      satLayers.forEach((layer, idx) => {
+        const shouldShow = idx === bestSatIdx && el.satToggle.checked;
+        if (shouldShow && !map.hasLayer(layer)) layer.addTo(map);
+        if (!shouldShow && map.hasLayer(layer)) map.removeLayer(layer);
       });
 
       updateTimelineSelection();
@@ -983,9 +869,9 @@
     }
 
     function startAnimation() {
-      if (!radarFrames.length || !el.radarToggle.checked) return;
+      if (!radarFrames.length) return;
       playing = true;
-      el.playBtn.textContent = "⏸ หยุด Radar";
+      el.playBtn.textContent = "⏸ หยุดภาพเคลื่อนไหว";
       el.playBtn.classList.add("active");
       clearInterval(playTimer);
 
@@ -997,48 +883,49 @@
 
     function stopAnimation() {
       playing = false;
-      el.playBtn.textContent = "▶ เล่น Radar";
+      el.playBtn.textContent = "▶ เล่นภาพเคลื่อนไหว";
       el.playBtn.classList.remove("active");
       clearInterval(playTimer);
       playTimer = null;
     }
 
-    async function loadRadar(showLoading = true) {
-      if (showLoading) showLoadingLayer("กำลังโหลด Radar ฝน...", "กำลังติดต่อ RainViewer API");
+    async function loadWeatherData(showLoading = true) {
+      if (showLoading) {
+        el.loadingTitle.textContent = "กำลังโหลด Radar และ Satellite...";
+        el.loading.style.display = "grid";
+      }
       try {
         const response = await fetch(CONFIG.radarApi, { cache: "no-store" });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
-        if (!data.host || !data.radar || !Array.isArray(data.radar.past)) {
-          throw new Error("รูปแบบข้อมูล Radar ไม่ถูกต้อง");
+        
+        radarHost = data.host;
+        radarFrames = (data.radar?.past || []).slice().sort((a,b) => a.time - b.time);
+        
+        // โหลดข้อมูลภาพดาวเทียมถ้ามีอยู่ใน API
+        if (data.satellite && data.satellite.infrared) {
+            satFrames = data.satellite.infrared.slice().sort((a,b) => a.time - b.time);
         }
 
-        radarHost = data.host;
-        radarFrames = data.radar.past.slice().sort((a,b) => a.time - b.time);
-
-        clearRadarLayers();
+        clearWeatherLayers();
         radarLayers = radarFrames.map(buildRadarLayer);
+        satLayers = satFrames.map(buildSatLayer);
+        
         selectedIndex = Math.max(0, radarFrames.length - 1);
         selectFrame(selectedIndex);
         renderTimeline();
 
         const latest = radarFrames[radarFrames.length - 1];
-        setStatus(true, "Radar พร้อมใช้งาน", `อัปเดตล่าสุด ${thaiTime(latest.time)} น.`);
-        if (radarRefreshTimer) clearTimeout(radarRefreshTimer);
-        radarRefreshTimer = setTimeout(() => loadRadar(false), CONFIG.refreshMs);
+        setStatus(true, "ระบบพร้อมใช้งาน", `อัปเดตล่าสุด ${thaiTime(latest?.time)} น.`);
+        
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => loadWeatherData(false), CONFIG.refreshMs);
       } catch (error) {
-        console.error("RainViewer error", error);
-        setStatus(false, "Radar เชื่อมต่อไม่สำเร็จ", error.message || "ไม่สามารถโหลดข้อมูลได้");
-        el.timelineMeta.textContent = "ไม่พบข้อมูล Radar";
+        console.error("Weather data error", error);
+        setStatus(false, "เชื่อมต่อข้อมูลสภาพอากาศไม่สำเร็จ", error.message || "ไม่สามารถโหลดข้อมูลได้");
       } finally {
         if (showLoading) hideLoading();
       }
-    }
-
-    function showLoadingLayer(title, message) {
-      el.loadingTitle.textContent = title;
-      el.loadingMessage.textContent = message;
-      el.loading.style.display = "grid";
     }
 
     function goToQuickPlace(key) {
@@ -1054,33 +941,22 @@
       if (!selectedName || !provinceData) return;
       const key = normalizeText(selectedName);
       const feature = provinceData.features.find(f => normalizeText(provinceProps(f).th) === key || normalizeText(provinceProps(f).en) === key);
-      if (!feature) return;
+      if (!feature || !provinceLayer) return;
 
-      if (!provinceLayer) return;
       let targetLayer = null;
-      provinceLayer.eachLayer(layer => {
-        if (layer.feature === feature) targetLayer = layer;
-      });
+      provinceLayer.eachLayer(layer => { if (layer.feature === feature) targetLayer = layer; });
       if (targetLayer) {
         selectProvinceFeature(targetLayer);
-        const bounds = targetLayer.getBounds();
-        map.fitBounds(bounds.pad(0.05), { maxZoom: 10, animate: true });
+        map.fitBounds(targetLayer.getBounds().pad(0.05), { maxZoom: 10, animate: true });
         const p = provinceProps(feature);
         setStatus(true, `จังหวัด: ${p.th || p.en}`, p.en || "");
       }
     }
 
-    // Layer controls
-    el.radarToggle.addEventListener("change", () => {
-      if (el.radarToggle.checked) {
-        const frame = radarLayers[selectedIndex];
-        if (frame) frame.addTo(map);
-      } else {
-        stopAnimation();
-        radarLayers.forEach(layer => { if (map.hasLayer(layer)) map.removeLayer(layer); });
-      }
-    });
-
+    // Toggle Listeners
+    el.radarToggle.addEventListener("change", () => selectFrame(selectedIndex));
+    el.satToggle.addEventListener("change", () => selectFrame(selectedIndex));
+    
     el.provinceToggle.addEventListener("change", () => {
       if (!provinceLayer) return;
       if (el.provinceToggle.checked) provinceLayer.addTo(map);
@@ -1088,16 +964,7 @@
       if (el.provinceToggle.checked && selectedProvinceLayer) selectedProvinceLayer.bringToFront();
     });
 
-    el.districtToggle.addEventListener("change", () => {
-      loadDistricts();
-    });
-
-    el.riverToggle.addEventListener("change", () => {
-      if (!riverLayer) return;
-      if (el.riverToggle.checked) riverLayer.addTo(map);
-      else map.removeLayer(riverLayer);
-    });
-
+    el.districtToggle.addEventListener("change", () => loadDistricts());
     el.provinceGoBtn.addEventListener("click", findProvinceAndZoom);
     el.provinceSelect.addEventListener("change", findProvinceAndZoom);
 
@@ -1106,12 +973,11 @@
     });
 
     el.playBtn.addEventListener("click", () => playing ? stopAnimation() : startAnimation());
-
     el.refreshBtn.addEventListener("click", () => {
       stopAnimation();
-      loadRadar(true);
+      loadWeatherData(true);
     });
-
+    
     el.homeBtn.addEventListener("click", () => {
       clearSelectedProvince();
       map.setView(CONFIG.defaultCenter, CONFIG.defaultZoom, { animate: true });
@@ -1119,9 +985,10 @@
     });
 
     el.opacitySlider.addEventListener("input", event => {
-      radarOpacity = Number(event.target.value) / 100;
+      currentOpacity = Number(event.target.value) / 100;
       el.opacityValue.textContent = `${event.target.value}%`;
-      radarLayers.forEach(layer => layer.setOpacity(radarOpacity));
+      radarLayers.forEach(layer => layer.setOpacity(currentOpacity));
+      satLayers.forEach(layer => layer.setOpacity(currentOpacity));
     });
 
     el.speedSlider.addEventListener("input", event => {
@@ -1147,15 +1014,11 @@
     window.addEventListener("resize", () => setTimeout(() => map.invalidateSize(), 150));
 
     async function init() {
-      showLoadingLayer("กำลังเตรียม Weather Radar Dashboard...", "โหลดขอบเขตจังหวัดและข้อมูลสภาพอากาศ");
-
-      // Load independent layers together; district boundary is intentionally lazy-loaded.
+      showLoading("กำลังเตรียม Dashboard...", "โหลดขอบเขตจังหวัดและข้อมูลสภาพอากาศ");
       await Promise.allSettled([
         loadProvinces(),
-        loadRivers(),
-        loadRadar(false)
+        loadWeatherData(false)
       ]);
-
       hideLoading();
     }
 
@@ -1163,4 +1026,3 @@
   </script>
 </body>
 </html>
-
