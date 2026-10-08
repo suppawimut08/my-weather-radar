@@ -33,17 +33,17 @@
 
     #map { width: 100%; height: 100%; }
 
-    /* ลายน้ำวันเวลาของเรดาร์ ย้ายมาด้านล่างสุด เหนือแถบ Timeline */
+    /* ลายน้ำวันเวลาของเรดาร์ (ย้ายมาขวาล่าง บนแถบ Scale ฝน) */
     .watermark-time {
-      position: fixed; z-index: 1050; bottom: 95px; left: 50%; transform: translateX(-50%);
-      padding: 8px 18px; border-radius: 30px;
-      background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148, 163, 184, 0.3);
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-      display: flex; gap: 10px; align-items: center;
+      position: fixed; z-index: 1050; right: 12px; bottom: 160px;
+      width: 220px; padding: 8px 12px; border-radius: 14px;
+      background: rgba(15, 23, 42, 0.95); border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex; justify-content: space-between; align-items: center;
       pointer-events: none;
     }
-    .watermark-time .label { color: #38bdf8; font-weight: 850; font-size: 13px; letter-spacing: 0.5px; }
-    .watermark-time .value { color: #f8fafc; font-weight: 700; font-size: 12px; }
+    .watermark-time .label { color: #38bdf8; font-weight: 850; font-size: 11px; }
+    .watermark-time .value { color: #f8fafc; font-weight: 700; font-size: 11px; }
 
     .windy-wrapper { position: absolute; inset: 0; z-index: 400; display: none; background: var(--bg); }
 
@@ -150,7 +150,8 @@
     .legend-bar { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #6cd1eb 0%, #00a3e0 16%, #007fb4 28%, #005588 38%, #ffee00 52%, #ffb700 62%, #ff4400 74%, #c10000 85%, #760000 94%, #ffafff 100%); border: 1px solid rgba(255,255,255,.18); }
     .legend-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; margin-top: 4px; font-weight: 600; }
 
-    .stats-card { position: fixed; z-index: 1050; right: 12px; bottom: 160px; width: 220px; border-radius: 15px; padding: 10px 14px; }
+    /* ขยับสถิติการเยี่ยมชมขึ้นไปอยู่เหนือกล่องลายน้ำเวลา */
+    .stats-card { position: fixed; z-index: 1050; right: 12px; bottom: 210px; width: 220px; border-radius: 15px; padding: 10px 14px; }
     .stats-header { font-size: 11px; font-weight: 850; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
     .stats-row { display: flex; align-items: center; justify-content: space-between; }
     .stat-item { text-align: center; flex: 1; }
@@ -187,13 +188,13 @@
       .brand-credit { font-size: 8px; }
       .status-card { min-width: 0; padding: 7px 9px; }
       
-      .watermark-time { bottom: 85px; top: auto; padding: 6px 14px; }
-      .watermark-time .label { font-size: 11px; }
-      .watermark-time .value { font-size: 10px; }
+      .watermark-time { bottom: 140px; right: 7px; width: 180px; padding: 6px 10px; }
+      .watermark-time .label { font-size: 10px; }
+      .watermark-time .value { font-size: 9px; }
 
       .left-panel { top: 105px; left: 7px; width: calc(100vw - 14px); max-height: calc(100vh - 195px); padding: 10px; }
       
-      .stats-card { right: 7px; bottom: 140px; width: 180px; padding: 8px 10px; }
+      .stats-card { right: 7px; bottom: 185px; width: 180px; padding: 8px 10px; }
       .legend-card { right: 7px; bottom: 77px; width: 180px; padding: 8px; }
       .timeline-card { width: calc(100vw - 14px); bottom: 7px; padding: 8px 9px 7px; }
     }
@@ -202,10 +203,10 @@
 <body>
   <div id="map"></div>
 
-  <!-- ลายน้ำบอกเวลาเรดาร์ (อยู่ตรงกลางด้านล่าง เหนือ Timeline) -->
-  <div id="watermarkTime" class="watermark-time">
-    <span class="label">ข้อมูลเรดาร์ฝน</span>
-    <span class="value"><span id="wmDate">--</span> เวลา <span id="wmTime">--</span></span>
+  <!-- ลายน้ำบอกเวลาเรดาร์ (ส่วนนี้จะถูกบันทึกลงในรูปภาพด้วย อยู่ขวาล่างเหนือ Scale) -->
+  <div id="watermarkTime" class="watermark-time ui-card">
+    <span class="label">เวลาเรดาร์</span>
+    <span class="value"><span id="wmDate">--</span> <span id="wmTime">--</span></span>
   </div>
 
   <div id="windyContainer" class="windy-wrapper" data-html2canvas-ignore>
@@ -322,7 +323,7 @@
 
     <div class="section-title">การควบคุมระบบ</div>
     <div class="control-row">
-      <button id="playBtn" class="primary">▶ เล่น Animation</button>
+      <button id="playBtn" class="primary">▶ เล่น เรดาร์เคลื่อนไหว</button>
       <button id="refreshBtn">↻ รีเฟรช</button>
       <button id="homeBtn">⌂ ทั้งประเทศ</button>
       <button id="saveBtn" class="success">📸 บันทึกภาพ</button>
@@ -552,7 +553,7 @@
               l.on("click", (e) => {
                 selectDistrictFeature(l);
                 setStatus(true, "พิกัดปัจจุบัน", fullName);
-                l.openPopup(); // สั่งให้ Popup เปิดตอนคลิก
+                l.openPopup(); 
               });
             }
           }
@@ -649,7 +650,7 @@
       isWindyOpen = !isWindyOpen;
       if (isWindyOpen) {
         el.windyContainer.style.display = 'block'; el.legendPanel.style.display = 'none'; el.watermarkTime.style.display = 'none'; 
-        this.textContent = '❌ กลับไปใช้แผนที่หลัก (Radar)'; this.classList.remove('primary'); this.classList.add('danger');
+        this.textContent = '❌ กลับไปใช้แผนที่หลัก (RADAR)'; this.classList.remove('primary'); this.classList.add('danger');
       } else {
         el.windyContainer.style.display = 'none'; el.legendPanel.style.display = 'block'; el.watermarkTime.style.display = 'flex';
         this.textContent = '☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)'; this.classList.remove('danger'); this.classList.add('primary');
@@ -688,7 +689,7 @@
     el.playBtn.onclick = () => {
       if(!radarFrames.length) return;
       playing = !playing;
-      el.playBtn.textContent = playing ? "⏸ หยุด" : "▶ เล่น Animation";
+      el.playBtn.textContent = playing ? "⏸ หยุด" : "▶ เล่นเรดาร์เคลื่อนไหว";
       if(playing) {
         const speed = Number(el.speedSlider.value) || 1500;
         playTimer = setInterval(() => { selectedIndex = (selectedIndex + 1) % radarFrames.length; selectFrame(selectedIndex); }, speed);
