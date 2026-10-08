@@ -4,16 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ระบบติดตามสภาพอากาศและน้ำท่วม</title>
-    <!-- เรียกใช้งาน OpenLayers สำหรับแสดงแผนที่ -->
+    <!-- เรียกใช้งาน OpenLayers สำหรับแสดงแผนที่ (แก้ไขลิงก์ให้สมบูรณ์) -->
     <link rel="stylesheet" href="https://jsdelivr.net">
     <style>
         body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f9; }
         header { background-color: #1e293b; color: white; padding: 15px; text-align: center; }
-        .container { display: flex; flex-direction: column; height: calc(100vh - 70px); }
+        .container { display: flex; flex-direction: column; height: calc(100vh - 70px); position: relative; }
         #map { width: 100%; flex-grow: 1; background-color: #e5e7eb; }
-        .info-panel { padding: 15px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; gap: 10px; justify-content: center; }
-        .btn { padding: 10px 15px; border: none; background-color: #2563eb; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .info-panel { padding: 15px; background: white; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .btn { padding: 10px 15px; border: none; background-color: #2563eb; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; }
         .btn:hover { background-color: #1d4ed8; }
+        
+        /* กล่องแสดงข้อมูลสภาพอากาศจาก API กรมอุตุฯ */
+        .weather-overlay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 250px;
+            font-size: 14px;
+        }
+        .weather-overlay h4 { margin: 0 0 10px 0; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 5px; }
+        .weather-data { margin-bottom: 5px; font-weight: 5px; }
+        .weather-status { font-weight: bold; color: #2563eb; }
     </style>
 </head>
 <body>
@@ -26,45 +43,59 @@
         <!-- ส่วนแสดงผลแผนที่ -->
         <div id="map"></div>
         
+        <!-- กล่องข้อมูลสภาพอากาศ (ผูกกับข้อมูล API กรมอุตุฯ) -->
+        <div class="weather-overlay" id="weatherBox">
+            <h4>🌡️ สภาพอากาศรายชั่วโมง (กรมอุตุฯ)</h4>
+            <div id="weatherContent">
+                <p style="color: #64748b; margin: 0;">กรุณาใส่ ACCESS_TOKEN เพื่อดึงข้อมูลสภาพอากาศจริง</p>
+            </div>
+        </div>
+        
         <!-- แผงควบคุมและลิงก์ข้อมูลน้ำท่วม -->
         <div class="info-panel">
             <button class="btn" onclick="toggleRadar()">เปิด/ปิด เรดาร์ฝน</button>
-            <a href="https://thaiwater.net" target="_blank"><button class="btn" style="background-color: #059669;">ดูสถานการณ์น้ำท่วม (ThaiWater)</button></a>
+            <a href="https://www.thaiwater.net" target="_blank" class="btn" style="background-color: #059669;">ดูสถานการณ์น้ำท่วม (ThaiWater)</a>
         </div>
     </div>
 
+    <!-- เรียกใช้งานระบบ OpenLayers (แก้ไขลิงก์ให้สมบูรณ์) -->
     <script src="https://jsdelivr.net"></script>
     <script>
-        // ตั้งค่าแผนที่เริ่มต้น (พิกัดประเทศไทย)
+        // --- 1. ตั้งค่าแผนที่เริ่มต้นให้ซูมเห็นทั้งประเทศไทย ---
+        // ใช้พิกัดประมาณ ลอน: 100.5, ลัต: 16.0 (แถวพิษณุโลกซึ่งเป็นจุดกึ่งกลางประเทศ) 
+        // ปรับ Zoom ไปที่ 5.2 เพื่อให้เห็นครอบคลุมทั้งเหนือ-ใต้-ออก-ตก
         const map = new ol.Map({
             target: 'map',
             layers: [
                 new ol.layer.Tile({
-                    source: new ol.source.OSM() // ใช้แผนที่ฐานจาก OpenStreetMap
+                    source: new ol.source.OSM() 
                 })
             ],
             view: new ol.View({
-                center: ol.proj.fromLonLat([100.5231, 13.7367]), // พิกัด กรุงเทพฯ
-                zoom: 6
+                center: ol.proj.fromLonLat([100.5446, 16.0544]), 
+                zoom: 5.2
             })
         });
 
-        // ดึงข้อมูลเรดาร์ฝนล่าสุดจาก RainViewer
+        // --- 2. ดึงข้อมูลเรดาร์ฝนล่าสุดจาก RainViewer (แก้ไข API Endpoint) ---
         let radarLayer;
         fetch('https://rainviewer.com')
             .then(res => res.json())
             .then(data => {
-                const latestRadar = data.radar.past[data.radar.past.length - 1];
-                const radarPath = latestRadar.path;
-                
-                radarLayer = new ol.layer.Tile({
-                    source: new ol.source.XYZ({
-                        url: `https://rainviewer.com${radarPath}/256/{z}/{x}/{y}/2/1_1.png`
-                    }),
-                    opacity: 0.6 // ความโปร่งใสของแถบเรดาร์
-                });
-                map.addLayer(radarLayer);
-            });
+                if(data && data.radar && data.radar.past) {
+                    const latestRadar = data.radar.past[data.radar.past.length - 1];
+                    const radarPath = latestRadar.path;
+                    
+                    radarLayer = new ol.layer.Tile({
+                        source: new ol.source.XYZ({
+                            url: `https://tilecache.rainviewer.com${radarPath}/256/{z}/{x}/{y}/2/1_1.png`
+                        }),
+                        opacity: 0.6 
+                    });
+                    map.addLayer(radarLayer);
+                }
+            })
+            .catch(err => console.error("ไม่สามารถโหลดข้อมูลเรดาร์ได้:", err));
 
         // ฟังก์ชันเปิด-ปิด เรดาร์
         function toggleRadar() {
@@ -72,6 +103,54 @@
                 radarLayer.setVisible(!radarLayer.getVisible());
             }
         }
+
+        // --- 3. ฟังก์ชันเชื่อมต่อกับ API พยากรณ์อากาศรายชั่วโมงของกรมอุตุนิยมวิทยา ---
+        // วิธีใช้: นำ Token ของคุณมาใส่ที่ตัวแปรด้านล่างนี้เพื่อเปิดใช้งานระบบดึงข้อมูลอัตโนมัติ
+        const TMD_ACCESS_TOKEN = "YOUR_ACCESS_TOKEN"; 
+        
+        function fetchTMDWeather(lat, lon) {
+            if (TMD_ACCESS_TOKEN === "YOUR_ACCESS_TOKEN") return; // ข้ามหากยังไม่มีการใส่ Token
+
+            // ดึงข้อมูลพยากรณ์รายชั่วโมงตามพิกัดปัจจุบัน
+            const url = `https://tmd.go.th{lat}&lon=${lon}&fields=tc,rh,cond&duration=1`;
+
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'accept': 'application/json',
+                    'authorization': `Bearer ${TMD_ACCESS_TOKEN}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.WeatherForcasts && data.WeatherForcasts[0].forecasts) {
+                    const forecast = data.WeatherForcasts[0].forecasts[0].data;
+                    
+                    // แปลงรหัสสภาพอากาศ (cond) เป็นข้อความตัวหนังสือภาษาไทย
+                    const condMap = {
+                        1: "ท้องฟ้าแจ่มใส ☀️", 2: "มีเมฆบางส่วน 🌤️", 3: "เมฆเป็นส่วนมาก ⛅", 4: "มีเมฆมาก ☁️",
+                        5: "ฝนตกเล็กน้อย 🌧️", 6: "ฝนปานกลาง 🌧️🌧️", 7: "ฝนตกหนัก ⛈️", 8: "ฝนฟ้าคะนอง ⚡",
+                        9: "อากาศหนาวจัด ❄️", 10: "อากาศหนาว 🥶", 11: "อากาศเย็น 🍃", 12: "อากาศร้อนจัด 🔥"
+                    };
+                    const statusText = condMap[forecast.cond] || "ไม่ทราบสถานะ";
+
+                    // แสดงผลลัพธ์ลงบนกล่องหน้าเว็บ
+                    document.getElementById('weatherContent').innerHTML = `
+                        <div class="weather-data"><b>พิกัด:</b> กรุงเทพฯ (จุดอ้างอิง)</div>
+                        <div class="weather-data"><b>อุณหภูมิ:</b> ${forecast.tc} °C</div>
+                        <div class="weather-data"><b>ความชื้น:</b> ${forecast.rh} %</div>
+                        <div class="weather-data"><b>สถานะ:</b> <span class="weather-status">${statusText}</span></div>
+                    `;
+                }
+            })
+            .catch(err => {
+                document.getElementById('weatherContent').innerHTML = `<p style="color: red;">โหลดข้อมูล API กรมอุตุฯ ล้มเหลว</p>`;
+                console.error(err);
+            });
+        }
+
+        // เรียกใช้งานฟังก์ชันพยากรณ์อากาศเริ่มต้น (ตัวอย่างใช้พิกัดกรุงเทพฯ ลัต: 13.73, ลอง: 100.52)
+        fetchTMDWeather(13.7367, 100.5231);
     </script>
 </body>
 </html>
