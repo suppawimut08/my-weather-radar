@@ -33,7 +33,7 @@
 
     #map { width: 100%; height: 100%; }
 
-    /* ลายน้ำวันเวลาของเรดาร์ (ย้ายมาขวาล่าง บนแถบ Scale ฝน) */
+    /* ลายน้ำวันเวลาของเรดาร์ (ขวาล่าง บนแถบ Scale ฝน) */
     .watermark-time {
       position: fixed; z-index: 1050; right: 12px; bottom: 160px;
       width: 220px; padding: 8px 12px; border-radius: 14px;
@@ -150,7 +150,6 @@
     .legend-bar { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #6cd1eb 0%, #00a3e0 16%, #007fb4 28%, #005588 38%, #ffee00 52%, #ffb700 62%, #ff4400 74%, #c10000 85%, #760000 94%, #ffafff 100%); border: 1px solid rgba(255,255,255,.18); }
     .legend-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; margin-top: 4px; font-weight: 600; }
 
-    /* ขยับสถิติการเยี่ยมชมขึ้นไปอยู่เหนือกล่องลายน้ำเวลา */
     .stats-card { position: fixed; z-index: 1050; right: 12px; bottom: 210px; width: 220px; border-radius: 15px; padding: 10px 14px; }
     .stats-header { font-size: 11px; font-weight: 850; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
     .stats-row { display: flex; align-items: center; justify-content: space-between; }
@@ -172,14 +171,21 @@
     .spinner { width: 28px; height: 28px; margin: 0 auto 10px; border: 3px solid rgba(255,255,255,.17); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ปรับแต่งสไตล์ Popup ให้สวยงามและชัดเจน */
     .leaflet-control-attribution { font-size: 8px !important; }
-    
-    /* สไตล์ Tooltip และ Popup อำเภอ */
     .district-tooltip { font-weight: 700; font-size: 11px; }
-    .leaflet-popup-content-wrapper { background: rgba(15, 23, 42, 0.95); color: #f8fafc; border: 1px solid rgba(148, 163, 184, 0.3); border-radius: 8px; }
+    .leaflet-popup-content-wrapper { 
+      background: rgba(15, 23, 42, 0.95); 
+      color: #f8fafc; 
+      border: 1px solid rgba(148, 163, 184, 0.3); 
+      border-radius: 10px; 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
     .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95); }
-    .leaflet-popup-content { margin: 10px 14px; line-height: 1.4; }
-    .popup-title { font-family: 'Noto Sans Thai', sans-serif; font-size: 13px; font-weight: 850; color: #38bdf8; text-align: center; }
+    .leaflet-popup-content { margin: 12px 16px; line-height: 1.4; }
+    .popup-title { font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; font-weight: 850; color: #38bdf8; text-align: center; margin: 0; }
+    .leaflet-container a.leaflet-popup-close-button { color: #94a3b8; padding: 4px; }
+    .leaflet-container a.leaflet-popup-close-button:hover { color: #f8fafc; }
 
     @media (max-width: 780px) {
       .brand { min-width: 0; padding: 8px 10px; }
@@ -203,7 +209,7 @@
 <body>
   <div id="map"></div>
 
-  <!-- ลายน้ำบอกเวลาเรดาร์ (ส่วนนี้จะถูกบันทึกลงในรูปภาพด้วย อยู่ขวาล่างเหนือ Scale) -->
+  <!-- ลายน้ำบอกเวลาเรดาร์ -->
   <div id="watermarkTime" class="watermark-time ui-card">
     <span class="label">เวลาเรดาร์</span>
     <span class="value"><span id="wmDate">--</span> <span id="wmTime">--</span></span>
@@ -323,7 +329,7 @@
 
     <div class="section-title">การควบคุมระบบ</div>
     <div class="control-row">
-      <button id="playBtn" class="primary">▶ เล่น เรดาร์เคลื่อนไหว</button>
+      <button id="playBtn" class="primary">▶ เล่น Animation</button>
       <button id="refreshBtn">↻ รีเฟรช</button>
       <button id="homeBtn">⌂ ทั้งประเทศ</button>
       <button id="saveBtn" class="success">📸 บันทึกภาพ</button>
@@ -351,7 +357,6 @@
     <div id="timeline" class="timeline"></div>
   </section>
 
-  <!-- สถิติการเยี่ยมชม (ไม่ติดในรูปภาพ) -->
   <section class="stats-card ui-card" data-html2canvas-ignore="true">
     <div class="stats-header">📊 สถิติผู้ใช้งาน</div>
     <div class="stats-row">
@@ -412,13 +417,11 @@
       minZoom: 5, maxZoom: 11, zoomControl: true, preferCanvas: true
     });
 
-    // สร้าง Map Panes จัดการลำดับความลึก (Z-Index)
     map.createPane('satPane');       map.getPane('satPane').style.zIndex = 350; 
     map.createPane('radarPane');     map.getPane('radarPane').style.zIndex = 360; 
     map.createPane('districtPane');  map.getPane('districtPane').style.zIndex = 440; 
     map.createPane('boundaryPane');  map.getPane('boundaryPane').style.zIndex = 450; 
 
-    // ข้อมูลแผนที่พื้นหลัง
     const BASEMAPS = {
       osm: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap", crossOrigin: true }),
       satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "&copy; Esri", crossOrigin: true }),
@@ -503,8 +506,8 @@
         color: "#64748b", 
         weight: el.districtToggle.checked ? 0.8 : 0, 
         opacity: 0.6, 
-        fillColor: "transparent", 
-        fillOpacity: 0.01, // ทำให้โปร่งใสเกือบสุดแต่ยังจับการคลิกได้
+        fillColor: "#ffffff", 
+        fillOpacity: 0.01, 
         dashArray: "3 4" 
       }; 
     }
@@ -513,18 +516,21 @@
       if (selectedDistrictLayer) { try { selectedDistrictLayer.setStyle(districtStyle()); } catch(_) {} }
       selectedDistrictLayer = layer;
       layer.setStyle({ color: "#ffffff", weight: 3, fillColor: "#38bdf8", fillOpacity: 0.2, dashArray: "" });
-      if (layer.bringToFront) layer.bringToFront();
+      
+      // หน่วงเวลาการดึงขอบเขตขึ้นมาด้านหน้าเพื่อป้องกันการขัดจังหวะ Popup
+      setTimeout(() => {
+        if (layer.bringToFront) layer.bringToFront();
+      }, 50);
     }
 
     async function loadProvinces() {
       try {
         const response = await fetch(CONFIG.provinceGeoJsonUrl, { cache: "force-cache" });
         provinceData = await response.json();
-        // เส้นจังหวัดจะไม่ Interactive เพื่อให้คลิกทะลุไปโดนอำเภอ
         provinceLayer = L.geoJSON(provinceData, { 
           style: provinceStyle, 
           pane: "boundaryPane",
-          interactive: false 
+          interactive: false // ให้คลิกทะลุไปโดนอำเภอ
         });
         if (el.provinceToggle.checked) provinceLayer.addTo(map);
 
@@ -540,20 +546,19 @@
         districtLayer = L.geoJSON(districtData, {
           style: districtStyle,
           pane: "districtPane",
+          interactive: true,
           onEachFeature: (f, l) => {
             const p = f.properties;
-            const ampTh = p.amp_th || p.district_name_th || p.name_th || "";
-            const proTh = p.pro_th || p.province_name_th || "";
-            const fullName = `อำเภอ${ampTh} จ.${proTh}`;
+            const ampTh = p.amp_th || p.district_name_th || p.name_th || p.AMP_NAM_T || p.AMP_T || "";
+            const proTh = p.pro_th || p.province_name_th || p.PROV_NAM_T || p.PROV_T || "";
             
             if (ampTh) {
-              // เพิ่มทั้ง Tooltip (เอาเมาส์ชี้) และ Popup (คลิกเด้งขึ้นมา)
+              const fullName = `อำเภอ${ampTh} จ.${proTh}`;
               l.bindTooltip(`<div class="district-tooltip">${fullName}</div>`, { sticky: true, direction: "top" });
-              l.bindPopup(`<div class="popup-title">${fullName}</div>`);
+              l.bindPopup(`<div class="popup-title">${fullName}</div>`, { closeButton: false, offset: [0, -5] });
               l.on("click", (e) => {
                 selectDistrictFeature(l);
                 setStatus(true, "พิกัดปัจจุบัน", fullName);
-                l.openPopup(); 
               });
             }
           }
@@ -650,7 +655,7 @@
       isWindyOpen = !isWindyOpen;
       if (isWindyOpen) {
         el.windyContainer.style.display = 'block'; el.legendPanel.style.display = 'none'; el.watermarkTime.style.display = 'none'; 
-        this.textContent = '❌ กลับไปใช้แผนที่หลัก (RADAR)'; this.classList.remove('primary'); this.classList.add('danger');
+        this.textContent = '❌ กลับไปใช้แผนที่หลัก (Radar)'; this.classList.remove('primary'); this.classList.add('danger');
       } else {
         el.windyContainer.style.display = 'none'; el.legendPanel.style.display = 'block'; el.watermarkTime.style.display = 'flex';
         this.textContent = '☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)'; this.classList.remove('danger'); this.classList.add('primary');
@@ -689,7 +694,7 @@
     el.playBtn.onclick = () => {
       if(!radarFrames.length) return;
       playing = !playing;
-      el.playBtn.textContent = playing ? "⏸ หยุด" : "▶ เล่นเรดาร์เคลื่อนไหว";
+      el.playBtn.textContent = playing ? "⏸ หยุด" : "▶ เล่น Animation";
       if(playing) {
         const speed = Number(el.speedSlider.value) || 1500;
         playTimer = setInterval(() => { selectedIndex = (selectedIndex + 1) % radarFrames.length; selectFrame(selectedIndex); }, speed);
