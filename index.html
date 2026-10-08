@@ -35,33 +35,27 @@
 
     /* Windy Embed Container */
     .windy-wrapper {
-      position: absolute;
-      inset: 0;
-      z-index: 400; /* อยู่เหนือ map (0) แต่อยู่ใต้ panel (1100+) */
-      display: none;
-      background: var(--bg);
+      position: absolute; inset: 0; z-index: 400; display: none; background: var(--bg);
     }
 
     .ui-card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      background: var(--panel); border: 1px solid var(--border);
+      box-shadow: var(--shadow); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
     }
 
     .topbar {
       position: fixed; z-index: 1200; top: 12px; left: 12px; right: 12px;
-      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
-      pointer-events: none;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; pointer-events: none;
     }
 
     .brand { pointer-events: auto; padding: 10px 14px; border-radius: 14px; min-width: 300px; }
     .brand-title { font-size: 18px; font-weight: 850; letter-spacing: .15px; }
     .brand-subtitle { margin-top: 2px; color: var(--muted); font-size: 11px; }
 
+    .topbar-right { display: flex; gap: 8px; pointer-events: auto; }
+
     .status-card {
-      pointer-events: auto; padding: 9px 12px; border-radius: 14px;
+      padding: 9px 12px; border-radius: 14px;
       display: flex; align-items: center; gap: 8px; min-width: 205px;
     }
     .status-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--ok); flex: 0 0 auto; box-shadow: 0 0 0 4px rgba(74, 222, 128, .10); }
@@ -69,23 +63,24 @@
     .status-text { font-size: 11px; line-height: 1.25; }
     .status-text strong { display: block; font-size: 12px; }
 
-    /* Warning Panel */
-    .warning-panel {
-      position: fixed; z-index: 1050; top: 75px; right: 12px;
-      width: 220px; border-radius: 14px; padding: 12px 14px;
-      background: rgba(127, 29, 29, 0.92);
-      border: 1px solid #ef4444;
-      box-shadow: var(--shadow);
-      pointer-events: auto;
+    /* Menu Toggle Button */
+    .menu-toggle-btn {
+      padding: 0 13px; border-radius: 14px; background: var(--panel); border: 1px solid var(--border);
+      color: white; cursor: pointer; display: grid; place-items: center; transition: background 0.2s;
     }
-    .warning-title { margin: 0 0 8px 0; color: #fca5a5; font-size: 13px; font-weight: 850; display: flex; align-items: center; gap: 6px; }
-    .warning-list { margin: 0; padding: 0 0 0 20px; color: #f8fafc; font-size: 12px; line-height: 1.6; }
-    .warning-list li strong { color: #fecaca; }
+    .menu-toggle-btn:hover { background: #1e293b; }
 
+    /* Left Panel (Control) */
     .left-panel {
       position: fixed; z-index: 1100; top: 88px; left: 12px;
       width: 312px; max-height: calc(100vh - 185px); overflow: auto;
       border-radius: 16px; padding: 13px; scrollbar-width: thin;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
+    }
+    
+    /* Class สำหรับซ่อนเมนู */
+    .left-panel.collapsed {
+      transform: translateX(calc(-100% - 24px)); opacity: 0; pointer-events: none;
     }
 
     .section-title { font-size: 13px; font-weight: 850; margin-bottom: 8px; }
@@ -111,13 +106,14 @@
     button.success:hover { background: #15803d; }
     button.danger { background: #ef4444; }
     button.danger:hover { background: #b91c1c; }
+    button.warning { background: #d97706; color: #fff; }
+    button.warning:hover { background: #b45309; }
 
     .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 12px; }
     .quick-btn { text-align: left; background: rgba(30, 41, 59, .96); padding: 8px 9px; }
     .quick-btn span { display: block; color: var(--muted); font-size: 9px; margin-top: 1px; }
 
     .divider { height: 1px; background: rgba(148,163,184,.14); margin: 11px 0; }
-
     .layer-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 0; }
     .layer-info { display: flex; align-items: center; gap: 8px; min-width: 0; }
 
@@ -157,6 +153,22 @@
     .frame-btn { flex: 0 0 auto; min-width: 68px; padding: 6px 8px; font-size: 10px; }
     .frame-btn.selected { background: #0284c7; outline: 2px solid rgba(56,189,248,.28); }
 
+    /* Credit Card (ติดไปกับภาพที่ถูกแคปเจอร์) */
+    .credit-card {
+      position: fixed; z-index: 1050; left: 12px; bottom: 88px;
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 14px; border-radius: 14px;
+      background: rgba(15, 23, 42, 0.88);
+      pointer-events: auto;
+    }
+    .credit-card img {
+      width: 50px; height: 50px; border-radius: 50%; object-fit: contain; background: white;
+    }
+    .credit-text { font-size: 10px; color: var(--muted); line-height: 1.4; }
+    .credit-text strong { color: #f8fafc; font-size: 11.5px; }
+    .credit-text a { color: var(--accent); text-decoration: none; }
+    .credit-text a:hover { text-decoration: underline; }
+
     .loading { position: fixed; inset: 0; z-index: 3000; display: grid; place-items: center; background: rgba(2,6,23,.5); backdrop-filter: blur(3px); }
     .loading-box { width: min(380px, calc(100vw - 40px)); background: #0f172a; border: 1px solid var(--border); border-radius: 16px; padding: 18px; text-align: center; box-shadow: var(--shadow); }
     .spinner { width: 28px; height: 28px; margin: 0 auto 10px; border: 3px solid rgba(255,255,255,.17); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
@@ -164,6 +176,22 @@
 
     .leaflet-control-attribution { font-size: 8px !important; }
     .province-tooltip { font-weight: 700; font-size: 11px; }
+
+    @media (max-width: 780px) {
+      .brand { min-width: 0; padding: 8px 10px; }
+      .brand-title { font-size: 14px; }
+      .brand-subtitle { font-size: 9px; }
+      .status-card { min-width: 0; padding: 7px 9px; }
+      
+      .left-panel { top: 68px; left: 7px; width: calc(100vw - 14px); max-height: 55vh; padding: 10px; }
+      .legend-card { right: 7px; bottom: 77px; width: 180px; padding: 8px; }
+      .timeline-card { width: calc(100vw - 14px); bottom: 7px; padding: 8px 9px 7px; }
+      
+      .credit-card { left: 7px; bottom: 77px; padding: 8px 10px; gap: 8px; }
+      .credit-card img { width: 38px; height: 38px; }
+      .credit-text { font-size: 8px; }
+      .credit-text strong { font-size: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -180,16 +208,22 @@
       <div class="brand-subtitle">Radar • Satellite • Forecasts</div>
     </div>
 
-    <div class="status-card ui-card">
-      <div id="statusDot" class="status-dot"></div>
-      <div class="status-text">
-        <strong id="statusTitle">กำลังเชื่อมต่อ...</strong>
-        <span id="statusDetail">ระบบปฏิบัติการ</span>
+    <div class="topbar-right">
+      <div class="status-card ui-card">
+        <div id="statusDot" class="status-dot"></div>
+        <div class="status-text">
+          <strong id="statusTitle">กำลังเชื่อมต่อ...</strong>
+          <span id="statusDetail">ระบบปฏิบัติการ</span>
+        </div>
       </div>
+      <!-- ปุ่ม Toggle ซ่อน/แสดงเมนู -->
+      <button id="toggleMenuBtn" class="menu-toggle-btn ui-card" title="ซ่อน/แสดงแถบควบคุม">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
     </div>
   </div>
 
-  <section class="left-panel ui-card" data-html2canvas-ignore>
+  <section id="leftPanel" class="left-panel ui-card" data-html2canvas-ignore>
     <div class="section-title">ค้นหา / ไปยังจังหวัด</div>
     <div class="search-box">
       <select id="provinceSelect" aria-label="เลือกจังหวัด">
@@ -238,11 +272,12 @@
 
     <div class="section-title">พยากรณ์ล่วงหน้า & แหล่งข้อมูลภายนอก</div>
     <div class="control-row">
-      <!-- ปุ่มเปิด/ปิด Windy -->
+      <button onclick="window.open('https://www.tmd.go.th/warning-and-events/warning-storm', '_blank')" class="warning" style="width: 100%;">⚠️ ประกาศเตือนภัย (กรมอุตุนิยมวิทยา) ↗</button>
+    </div>
+    <div class="control-row" style="margin-top: 8px;">
       <button id="windyToggleBtn" class="primary" style="width: 100%;">☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)</button>
     </div>
     <div class="control-row" style="margin-top: 8px;">
-      <!-- ปุ่มลิงก์ภายนอก -->
       <button onclick="window.open('https://weather.tmd.go.th/', '_blank')" style="flex: 1;">📡 เรดาร์กรมอุตุฯ ↗</button>
       <button onclick="window.open('https://www.thaiwater.net/', '_blank')" style="flex: 1;">💧 ThaiWater ↗</button>
     </div>
@@ -273,13 +308,18 @@
     </div>
     <div id="timeline" class="timeline"></div>
   </section>
-  
-  <div id="warningPanel" class="warning-panel" style="display: none;">
-    <h4 class="warning-title">⚠️ พื้นที่เฝ้าระวังฝนตกหนัก</h4>
-    <p style="font-size: 10px; color: #fca5a5; margin: 0 0 6px 0; border-bottom: 1px solid #b91c1c; padding-bottom: 4px;">ปริมาณฝนสะสม > 50 มม.</p>
-    <ul class="warning-list" id="warningList">
-      <!-- ข้อมูล Mock -->
-    </ul>
+
+  <!-- Credit Card (จะแสดงตอนบันทึกภาพด้วย) -->
+  <div class="credit-card ui-card">
+    <!-- ใส่ crossorigin="anonymous" เพื่อแก้ปัญหาบันทึกภาพไม่ติดเนื่องจากระบบ Security CORS -->
+    <img src="481134_440435936009220_745850295_n_2.jpg" alt="CMRU Geography Logo" crossorigin="anonymous">
+    <div class="credit-text">
+      <strong>จัดทำโดย</strong><br>
+      หลักสูตรภูมิศาสตร์และภูมิสารสนเทศ<br>
+      คณะมนุษยศาสตร์และสังคมศาสตร์<br>
+      มหาวิทยาลัยราชภัฏเชียงใหม่<br>
+      <a href="http://www.geo.cmru.ac.th" target="_blank">www.geo.cmru.ac.th</a>
+    </div>
   </div>
 
   <section id="legendPanel" class="legend-card ui-card">
@@ -341,9 +381,9 @@
       opacitySlider: document.getElementById("opacitySlider"), opacityValue: document.getElementById("opacityValue"), 
       timeline: document.getElementById("timeline"), timelineMeta: document.getElementById("timelineMeta"), 
       loading: document.getElementById("loading"), loadingTitle: document.getElementById("loadingTitle"), 
-      loadingMessage: document.getElementById("loadingMessage"), warningPanel: document.getElementById("warningPanel"),
-      warningList: document.getElementById("warningList"), windyToggleBtn: document.getElementById("windyToggleBtn"),
-      windyContainer: document.getElementById("windyContainer"), legendPanel: document.getElementById("legendPanel")
+      loadingMessage: document.getElementById("loadingMessage"), windyToggleBtn: document.getElementById("windyToggleBtn"),
+      windyContainer: document.getElementById("windyContainer"), legendPanel: document.getElementById("legendPanel"),
+      leftPanel: document.getElementById("leftPanel"), toggleMenuBtn: document.getElementById("toggleMenuBtn")
     };
 
     let radarHost = "", radarFrames = [], radarLayers = [], satFrames = [], satLayers = [];
@@ -351,6 +391,15 @@
     let currentOpacity = CONFIG.layerOpacity;
     let provinceData = null, provinceLayer = null, selectedProvinceLayer = null;
     let isWindyOpen = false;
+
+    // หากเข้าใช้งานผ่านมือถือ ให้ซ่อนเมนูด้านซ้ายไว้ตั้งแต่ต้น เพื่อให้เห็นแผนที่เต็มๆ
+    if (window.innerWidth <= 780) {
+        el.leftPanel.classList.add("collapsed");
+    }
+
+    el.toggleMenuBtn.onclick = () => {
+        el.leftPanel.classList.toggle("collapsed");
+    };
 
     function setStatus(ok, title, detail) {
       el.statusDot.classList.toggle("error", !ok);
@@ -425,20 +474,6 @@
       }
     }
 
-    function checkHeavyRainWarnings() {
-      const hasWarning = true; 
-      if (hasWarning) {
-        el.warningPanel.style.display = "block";
-        el.warningList.innerHTML = `
-          <li>เชียงใหม่ <strong>(65 มม.)</strong></li>
-          <li>จันทบุรี <strong>(52 มม.)</strong></li>
-          <li>ตราด <strong>(78 มม.)</strong></li>
-        `;
-      } else {
-        el.warningPanel.style.display = "none";
-      }
-    }
-
     function selectFrame(index) {
       if (!radarFrames.length) return;
       selectedIndex = Math.max(0, Math.min(index, radarFrames.length - 1));
@@ -477,8 +512,6 @@
         selectedIndex = Math.max(0, radarFrames.length - 1);
         selectFrame(selectedIndex); renderTimeline();
         setStatus(true, "ระบบพร้อมใช้งาน", `อัปเดตล่าสุด ${thaiTime(radarFrames[radarFrames.length - 1]?.time)} น.`);
-        
-        checkHeavyRainWarnings(); 
 
         if (refreshTimer) clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => loadWeatherData(false), CONFIG.refreshMs);
@@ -552,6 +585,7 @@
         alert("⚠️ ขออภัย: เบราว์เซอร์ไม่อนุญาตให้แคปเจอร์ภาพจากหน้าต่างภายนอก (Windy) กรุณากลับไปใช้หน้าแผนที่หลักก่อนทำการบันทึกภาพครับ");
         return;
       }
+      // ถ้ายูสเซอร์เปิดเมนูไว้ แต่อยากได้พื้นที่โล่งๆ สามารถซ่อนเมนูก่อนแคปได้อัตโนมัติ (แต่เราซ่อนให้แล้วด้วย data-html2canvas-ignore)
       showLoading("กำลังสร้างรูปภาพ...", "โปรดรอสักครู่ ระบบกำลังประมวลผลแผนที่");
       setTimeout(() => {
         html2canvas(document.body, { 
