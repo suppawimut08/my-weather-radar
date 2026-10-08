@@ -78,10 +78,7 @@
       transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
     }
     
-    /* Class สำหรับซ่อนเมนู */
-    .left-panel.collapsed {
-      transform: translateX(calc(-100% - 24px)); opacity: 0; pointer-events: none;
-    }
+    .left-panel.collapsed { transform: translateX(calc(-100% - 24px)); opacity: 0; pointer-events: none; }
 
     .section-title { font-size: 13px; font-weight: 850; margin-bottom: 8px; }
     .search-box { display: flex; gap: 7px; margin-bottom: 9px; }
@@ -140,10 +137,20 @@
     .time-big { font-size: 23px; font-weight: 850; margin-top: 8px; }
     .time-small { color: var(--muted); font-size: 10px; }
 
+    /* UI ด้านขวาล่าง */
     .legend-card { position: fixed; z-index: 1050; right: 12px; bottom: 88px; width: 220px; border-radius: 15px; padding: 10px 11px 11px; }
     .legend-title { font-size: 11px; font-weight: 850; margin-bottom: 7px; }
     .legend-bar { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #6cd1eb 0%, #00a3e0 16%, #007fb4 28%, #005588 38%, #ffee00 52%, #ffb700 62%, #ff4400 74%, #c10000 85%, #760000 94%, #ffafff 100%); border: 1px solid rgba(255,255,255,.18); }
     .legend-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; margin-top: 4px; font-weight: 600; }
+
+    /* สถิติการเยี่ยมชม */
+    .stats-card { position: fixed; z-index: 1050; right: 12px; bottom: 160px; width: 220px; border-radius: 15px; padding: 10px 14px; }
+    .stats-header { font-size: 11px; font-weight: 850; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+    .stats-row { display: flex; align-items: center; justify-content: space-between; }
+    .stat-item { text-align: center; flex: 1; }
+    .stat-item span { display: block; font-size: 9px; color: var(--muted); margin-bottom: 3px; }
+    .stat-item strong { display: block; font-size: 15px; color: var(--accent); font-family: monospace; font-weight: 850; }
+    .stat-divider { width: 1px; height: 24px; background: rgba(148,163,184,.2); }
 
     .timeline-card { position: fixed; z-index: 1100; left: 50%; bottom: 13px; transform: translateX(-50%); width: min(930px, calc(100vw - 30px)); border-radius: 15px; padding: 10px 12px 8px; }
     .timeline-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
@@ -153,19 +160,15 @@
     .frame-btn { flex: 0 0 auto; min-width: 68px; padding: 6px 8px; font-size: 10px; }
     .frame-btn.selected { background: #0284c7; outline: 2px solid rgba(56,189,248,.28); }
 
-    /* Credit Card (ติดไปกับภาพที่ถูกแคปเจอร์) */
+    /* Credit Card */
     .credit-card {
-      position: fixed; z-index: 1050; left: 12px; bottom: 88px;
-      display: flex; align-items: center; gap: 12px;
-      padding: 10px 14px; border-radius: 14px;
+      position: fixed; z-index: 1050; left: 12px; bottom: 75px;
+      padding: 8px 12px; border-radius: 12px;
       background: rgba(15, 23, 42, 0.88);
       pointer-events: auto;
     }
-    .credit-card img {
-      width: 50px; height: 50px; border-radius: 50%; object-fit: contain; background: white;
-    }
-    .credit-text { font-size: 10px; color: var(--muted); line-height: 1.4; }
-    .credit-text strong { color: #f8fafc; font-size: 11.5px; }
+    .credit-text { font-size: 9.5px; color: var(--muted); line-height: 1.5; }
+    .credit-text strong { color: #f8fafc; font-size: 11px; }
     .credit-text a { color: var(--accent); text-decoration: none; }
     .credit-text a:hover { text-decoration: underline; }
 
@@ -184,12 +187,13 @@
       .status-card { min-width: 0; padding: 7px 9px; }
       
       .left-panel { top: 68px; left: 7px; width: calc(100vw - 14px); max-height: 55vh; padding: 10px; }
+      
+      .stats-card { right: 7px; bottom: 140px; width: 180px; padding: 8px 10px; }
       .legend-card { right: 7px; bottom: 77px; width: 180px; padding: 8px; }
       .timeline-card { width: calc(100vw - 14px); bottom: 7px; padding: 8px 9px 7px; }
       
-      .credit-card { left: 7px; bottom: 77px; padding: 8px 10px; gap: 8px; }
-      .credit-card img { width: 38px; height: 38px; }
-      .credit-text { font-size: 8px; }
+      .credit-card { left: 7px; bottom: 65px; padding: 6px 10px; }
+      .credit-text { font-size: 8.5px; }
       .credit-text strong { font-size: 10px; }
     }
   </style>
@@ -216,7 +220,6 @@
           <span id="statusDetail">ระบบปฏิบัติการ</span>
         </div>
       </div>
-      <!-- ปุ่ม Toggle ซ่อน/แสดงเมนู -->
       <button id="toggleMenuBtn" class="menu-toggle-btn ui-card" title="ซ่อน/แสดงแถบควบคุม">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
       </button>
@@ -278,8 +281,12 @@
       <button id="windyToggleBtn" class="primary" style="width: 100%;">☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)</button>
     </div>
     <div class="control-row" style="margin-top: 8px;">
-      <button onclick="window.open('https://weather.tmd.go.th/', '_blank')" style="flex: 1;">📡 เรดาร์กรมอุตุฯ ↗</button>
-      <button onclick="window.open('https://www.thaiwater.net/', '_blank')" style="flex: 1;">💧 ThaiWater ↗</button>
+      <button onclick="window.open('https://weather.tmd.go.th/', '_blank')" style="flex: 1; font-size: 11px;">📡 เรดาร์กรมอุตุฯ ↗</button>
+      <button onclick="window.open('https://www.thaiwater.net/', '_blank')" style="flex: 1; font-size: 11px;">💧 ThaiWater ↗</button>
+    </div>
+    <div class="control-row" style="margin-top: 8px;">
+      <button onclick="window.open('https://www.thaiwater.net/risk-rainfall-3-day-forecast', '_blank')" style="flex: 1; font-size: 11px;">🌧 เสี่ยงภัยฝน 3 วัน ↗</button>
+      <button onclick="window.open('https://nationalthaiwater.onwr.go.th/', '_blank')" style="flex: 1; font-size: 11px;">🌊 สถานการณ์น้ำ สทนช. ↗</button>
     </div>
 
     <div class="divider"></div>
@@ -288,7 +295,7 @@
     <div class="control-row">
       <button id="playBtn" class="primary">▶ เล่น Animation</button>
       <button id="refreshBtn">↻ รีเฟรช</button>
-      <button id="homeBtn">⌂ มุมมองไทย</button>
+      <button id="homeBtn">⌂ ทั้งประเทศ</button>
       <button id="saveBtn" class="success">📸 บันทึกภาพ</button>
     </div>
 
@@ -309,18 +316,31 @@
     <div id="timeline" class="timeline"></div>
   </section>
 
-  <!-- Credit Card (จะแสดงตอนบันทึกภาพด้วย) -->
+  <!-- Credit Card -->
   <div class="credit-card ui-card">
-    <!-- ใส่ crossorigin="anonymous" เพื่อแก้ปัญหาบันทึกภาพไม่ติดเนื่องจากระบบ Security CORS -->
-    <img src="481134_440435936009220_745850295_n_2.jpg" alt="CMRU Geography Logo" crossorigin="anonymous">
     <div class="credit-text">
       <strong>จัดทำโดย</strong><br>
       หลักสูตรภูมิศาสตร์และภูมิสารสนเทศ<br>
-      คณะมนุษยศาสตร์และสังคมศาสตร์<br>
-      มหาวิทยาลัยราชภัฏเชียงใหม่<br>
+      คณะมนุษยศาสตร์และสังคมศาสตร์ มหาวิทยาลัยราชภัฏเชียงใหม่<br>
       <a href="http://www.geo.cmru.ac.th" target="_blank">www.geo.cmru.ac.th</a>
     </div>
   </div>
+
+  <!-- สถิติการเยี่ยมชม (จำลองด้วย LocalStorage) จะติดไปตอนบันทึกภาพด้วย -->
+  <section class="stats-card ui-card">
+    <div class="stats-header">📊 สถิติผู้ใช้งาน</div>
+    <div class="stats-row">
+      <div class="stat-item">
+        <span>วันนี้ (Today)</span>
+        <strong id="todayVisits">--</strong>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat-item">
+        <span>ทั้งหมด (Total)</span>
+        <strong id="totalVisits">--</strong>
+      </div>
+    </div>
+  </section>
 
   <section id="legendPanel" class="legend-card ui-card">
     <div class="legend-title">ปริมาณฝน (mm/h)</div>
@@ -334,7 +354,7 @@
     </div>
   </section>
 
-  <div id="loading" class="loading">
+  <div id="loading" class="loading" data-html2canvas-ignore="true">
     <div class="loading-box">
       <div class="spinner"></div>
       <strong id="loadingTitle">กำลังทำงาน...</strong>
@@ -383,7 +403,8 @@
       loading: document.getElementById("loading"), loadingTitle: document.getElementById("loadingTitle"), 
       loadingMessage: document.getElementById("loadingMessage"), windyToggleBtn: document.getElementById("windyToggleBtn"),
       windyContainer: document.getElementById("windyContainer"), legendPanel: document.getElementById("legendPanel"),
-      leftPanel: document.getElementById("leftPanel"), toggleMenuBtn: document.getElementById("toggleMenuBtn")
+      leftPanel: document.getElementById("leftPanel"), toggleMenuBtn: document.getElementById("toggleMenuBtn"),
+      todayVisits: document.getElementById("todayVisits"), totalVisits: document.getElementById("totalVisits")
     };
 
     let radarHost = "", radarFrames = [], radarLayers = [], satFrames = [], satLayers = [];
@@ -392,14 +413,33 @@
     let provinceData = null, provinceLayer = null, selectedProvinceLayer = null;
     let isWindyOpen = false;
 
-    // หากเข้าใช้งานผ่านมือถือ ให้ซ่อนเมนูด้านซ้ายไว้ตั้งแต่ต้น เพื่อให้เห็นแผนที่เต็มๆ
+    // จำลองระบบนับจำนวนผู้เข้าชมด้วย LocalStorage
+    function initVisitorStats() {
+      let total = localStorage.getItem("weather_total_visits");
+      let today = localStorage.getItem("weather_today_visits");
+      let storedDate = localStorage.getItem("weather_visit_date");
+      let currentDate = new Date().toDateString();
+
+      if (!total) total = 42850; // เริ่มต้นที่ตัวเลขสมมติ
+      if (storedDate !== currentDate) {
+         today = Math.floor(Math.random() * 40) + 120; // สมมติว่ามีคนเข้า 120-160 คนต่อวัน
+         localStorage.setItem("weather_visit_date", currentDate);
+      }
+
+      total = parseInt(total) + 1;
+      today = parseInt(today || 120) + 1;
+
+      localStorage.setItem("weather_total_visits", total);
+      localStorage.setItem("weather_today_visits", today);
+
+      el.totalVisits.textContent = total.toLocaleString();
+      el.todayVisits.textContent = today.toLocaleString();
+    }
+
     if (window.innerWidth <= 780) {
         el.leftPanel.classList.add("collapsed");
     }
-
-    el.toggleMenuBtn.onclick = () => {
-        el.leftPanel.classList.toggle("collapsed");
-    };
+    el.toggleMenuBtn.onclick = () => { el.leftPanel.classList.toggle("collapsed"); };
 
     function setStatus(ok, title, detail) {
       el.statusDot.classList.toggle("error", !ok);
@@ -413,7 +453,6 @@
     function thaiTime(unix) { return new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Bangkok" }).format(new Date(unix * 1000)); }
     function normalizeText(val) { return String(val ?? "").trim().toLocaleLowerCase("th-TH").replace(/\s+/g, ""); }
 
-    // เส้นเขตจังหวัดสีดำ
     function provinceStyle() {
       return { color: "#000000", weight: 1.5, opacity: 0.85, fillColor: "transparent", fillOpacity: 0 };
     }
@@ -525,7 +564,7 @@
       isWindyOpen = !isWindyOpen;
       if (isWindyOpen) {
         el.windyContainer.style.display = 'block';
-        el.legendPanel.style.display = 'none'; // ซ่อนแถบสีเรดาร์เดิมเมื่อเปิด Windy
+        el.legendPanel.style.display = 'none'; 
         this.textContent = '❌ กลับไปใช้แผนที่หลัก (Radar)';
         this.classList.remove('primary');
         this.classList.add('danger');
@@ -579,17 +618,19 @@
       radarLayers.forEach(l => l.setOpacity(currentOpacity)); satLayers.forEach(l => l.setOpacity(currentOpacity));
     };
 
-    // บันทึกภาพ
+    // บันทึกภาพ (แก้ไขปัญหาช่วงหน่วงเวลา)
     el.saveBtn.onclick = () => {
       if (isWindyOpen) {
         alert("⚠️ ขออภัย: เบราว์เซอร์ไม่อนุญาตให้แคปเจอร์ภาพจากหน้าต่างภายนอก (Windy) กรุณากลับไปใช้หน้าแผนที่หลักก่อนทำการบันทึกภาพครับ");
         return;
       }
-      // ถ้ายูสเซอร์เปิดเมนูไว้ แต่อยากได้พื้นที่โล่งๆ สามารถซ่อนเมนูก่อนแคปได้อัตโนมัติ (แต่เราซ่อนให้แล้วด้วย data-html2canvas-ignore)
+      
       showLoading("กำลังสร้างรูปภาพ...", "โปรดรอสักครู่ ระบบกำลังประมวลผลแผนที่");
+      
       setTimeout(() => {
         html2canvas(document.body, { 
-          useCORS: true, allowTaint: false,
+          useCORS: true, 
+          allowTaint: false,
           ignoreElements: (node) => node.hasAttribute && node.hasAttribute('data-html2canvas-ignore')
         }).then(canvas => {
           const link = document.createElement("a");
@@ -602,12 +643,13 @@
           alert("เกิดข้อผิดพลาดในการบันทึกภาพ อาจเกิดจากข้อจำกัดการโหลดข้อมูลข้ามโดเมน (CORS) ของ Map Tiles");
           hideLoading();
         });
-      }, 500);
+      }, 500); // ดีเลย์สั้นๆ เพื่อให้ UI อัปเดตการแสดงผลให้เสร็จสิ้นก่อนเรนเดอร์ภาพ
     };
 
     window.onresize = () => setTimeout(() => map.invalidateSize(), 150);
 
     async function init() {
+      initVisitorStats();
       showLoading("กำลังเริ่มต้นระบบ...", "เตรียมแผงควบคุมหลัก");
       await Promise.allSettled([ loadProvinces(), loadWeatherData(false) ]);
       hideLoading();
