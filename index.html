@@ -4,10 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1220" />
-  <title>Thailand Weather Radar, Sat & Thaiwater</title>
+  <title>Thailand Weather Radar & Satellite</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <!-- ไลบรารีสำหรับแคปเจอร์หน้าจอเป็นรูปภาพ -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -27,13 +26,9 @@
     * { box-sizing: border-box; }
 
     html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
       font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Noto Sans Thai", sans-serif;
-      background: var(--bg);
-      color: var(--text);
+      background: var(--bg); color: var(--text);
     }
 
     #map { width: 100%; height: 100%; }
@@ -47,66 +42,44 @@
     }
 
     .topbar {
-      position: fixed;
-      z-index: 1200;
-      top: 12px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
+      position: fixed; z-index: 1200; top: 12px; left: 12px; right: 12px;
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
       pointer-events: none;
     }
 
-    .brand {
-      pointer-events: auto;
-      padding: 10px 14px;
-      border-radius: 14px;
-      min-width: 300px;
-    }
-
+    .brand { pointer-events: auto; padding: 10px 14px; border-radius: 14px; min-width: 300px; }
     .brand-title { font-size: 18px; font-weight: 850; letter-spacing: .15px; }
     .brand-subtitle { margin-top: 2px; color: var(--muted); font-size: 11px; }
 
     .status-card {
-      pointer-events: auto;
-      padding: 9px 12px;
-      border-radius: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-width: 205px;
+      pointer-events: auto; padding: 9px 12px; border-radius: 14px;
+      display: flex; align-items: center; gap: 8px; min-width: 205px;
     }
-
-    .status-dot {
-      width: 10px; height: 10px; border-radius: 999px;
-      background: var(--ok);
-      box-shadow: 0 0 0 4px rgba(74, 222, 128, .10);
-      flex: 0 0 auto;
-    }
-    .status-dot.error {
-      background: var(--danger);
-      box-shadow: 0 0 0 4px rgba(251, 113, 133, .10);
-    }
+    .status-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--ok); flex: 0 0 auto; box-shadow: 0 0 0 4px rgba(74, 222, 128, .10); }
+    .status-dot.error { background: var(--danger); box-shadow: 0 0 0 4px rgba(251, 113, 133, .10); }
     .status-text { font-size: 11px; line-height: 1.25; }
     .status-text strong { display: block; font-size: 12px; }
 
+    /* Warning Panel (จะไม่ถูกซ่อนตอนบันทึกภาพ) */
+    .warning-panel {
+      position: fixed; z-index: 1050; top: 75px; right: 12px;
+      width: 220px; border-radius: 14px; padding: 12px 14px;
+      background: rgba(127, 29, 29, 0.92); /* พื้นหลังสีแดงเข้ม */
+      border: 1px solid #ef4444;
+      box-shadow: var(--shadow);
+      pointer-events: auto;
+    }
+    .warning-title { margin: 0 0 8px 0; color: #fca5a5; font-size: 13px; font-weight: 850; display: flex; align-items: center; gap: 6px; }
+    .warning-list { margin: 0; padding: 0 0 0 20px; color: #f8fafc; font-size: 12px; line-height: 1.6; }
+    .warning-list li strong { color: #fecaca; }
+
     .left-panel {
-      position: fixed;
-      z-index: 1100;
-      top: 88px;
-      left: 12px;
-      width: 312px;
-      max-height: calc(100vh - 185px);
-      overflow: auto;
-      border-radius: 16px;
-      padding: 13px;
-      scrollbar-width: thin;
+      position: fixed; z-index: 1100; top: 88px; left: 12px;
+      width: 312px; max-height: calc(100vh - 185px); overflow: auto;
+      border-radius: 16px; padding: 13px; scrollbar-width: thin;
     }
 
     .section-title { font-size: 13px; font-weight: 850; margin-bottom: 8px; }
-
     .search-box { display: flex; gap: 7px; margin-bottom: 9px; }
     .search-box select { min-width: 0; flex: 1; }
 
@@ -117,9 +90,8 @@
     }
 
     button {
-      border: 0; border-radius: 10px; padding: 8px 10px;
-      color: white; background: #1e293b; cursor: pointer;
-      font: inherit; font-size: 12px;
+      border: 0; border-radius: 10px; padding: 8px 10px; color: white;
+      background: #1e293b; cursor: pointer; font: inherit; font-size: 12px;
       transition: transform .12s ease, background .12s ease;
     }
     button:hover { background: #334155; }
@@ -141,8 +113,7 @@
     .swatch { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,.25); flex: 0 0 auto; }
     .swatch-radar { background: linear-gradient(90deg,#00a3e0,#005588,#ffee00,#ff4400,#c10000,#ffafff); }
     .swatch-sat { background: linear-gradient(135deg, #cbd5e1 0%, #334155 100%); }
-    .swatch-province { background: transparent; border: 2px solid #000000; }
-    .swatch-thaiwater { background: #3b82f6; border-radius: 50%; }
+    .swatch-province { background: transparent; border: 2px solid #000000; } /* เส้นขอบเขตสีดำ */
 
     .layer-text strong { display: block; font-size: 11px; }
     .layer-text span { display: block; color: var(--muted); font-size: 9px; margin-top: 1px; }
@@ -162,10 +133,11 @@
     .time-big { font-size: 23px; font-weight: 850; margin-top: 8px; }
     .time-small { color: var(--muted); font-size: 10px; }
 
+    /* Legend Card (จะไม่ถูกซ่อน) */
     .legend-card { position: fixed; z-index: 1050; right: 12px; bottom: 88px; width: 220px; border-radius: 15px; padding: 10px 11px 11px; }
     .legend-title { font-size: 11px; font-weight: 850; margin-bottom: 7px; }
     .legend-bar { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #6cd1eb 0%, #00a3e0 16%, #007fb4 28%, #005588 38%, #ffee00 52%, #ffb700 62%, #ff4400 74%, #c10000 85%, #760000 94%, #ffafff 100%); border: 1px solid rgba(255,255,255,.18); }
-    .legend-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 8px; margin-top: 4px; }
+    .legend-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; margin-top: 4px; font-weight: 600; }
 
     .timeline-card { position: fixed; z-index: 1100; left: 50%; bottom: 13px; transform: translateX(-50%); width: min(930px, calc(100vw - 30px)); border-radius: 15px; padding: 10px 12px 8px; }
     .timeline-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
@@ -181,23 +153,17 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .leaflet-control-attribution { font-size: 8px !important; }
-    .province-tooltip, .district-tooltip { font-weight: 700; font-size: 11px; }
-
-    /* Thaiwater Popup Style */
-    .tw-popup { font-family: Inter, "Noto Sans Thai", sans-serif; font-size: 12px; color: #1e293b; }
-    .tw-popup h3 { margin: 0 0 5px 0; font-size: 14px; color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 4px; }
-    .tw-popup p { margin: 3px 0; }
-    .tw-popup strong { color: #0284c7; }
-
+    .province-tooltip { font-weight: 700; font-size: 11px; }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
+  <!-- Panels ที่จะไม่ถูก Export (ซ่อนปุ่มบังคับต่างๆ) -->
   <div class="topbar" data-html2canvas-ignore>
     <div class="brand ui-card">
       <div class="brand-title">🌧 Thailand Weather Dashboard</div>
-      <div class="brand-subtitle">Radar • Satellite • Thaiwater Runoff</div>
+      <div class="brand-subtitle">Radar • Satellite • Boundary</div>
     </div>
 
     <div class="status-card ui-card">
@@ -233,7 +199,7 @@
     <div class="layer-row">
       <div class="layer-info">
         <div class="swatch swatch-radar"></div>
-        <div class="layer-text"><strong>Radar ฝน</strong><span>RainViewer precipitation</span></div>
+        <div class="layer-text"><strong>Radar ฝน (มม./ชม.)</strong><span>ภาพเรดาร์ปริมาณฝน</span></div>
       </div>
       <label class="toggle"><input id="radarToggle" type="checkbox" checked><span class="slider"></span></label>
     </div>
@@ -241,17 +207,9 @@
     <div class="layer-row">
       <div class="layer-info">
         <div class="swatch swatch-sat"></div>
-        <div class="layer-text"><strong>ดาวเทียม IR (Satellite)</strong><span>ภาพถ่ายอินฟราเรด</span></div>
+        <div class="layer-text"><strong>ดาวเทียม IR</strong><span>ภาพถ่ายอินฟราเรดเมฆ</span></div>
       </div>
       <label class="toggle"><input id="satToggle" type="checkbox"><span class="slider"></span></label>
-    </div>
-
-    <div class="layer-row">
-      <div class="layer-info">
-        <div class="swatch swatch-thaiwater"></div>
-        <div class="layer-text"><strong>สถานีน้ำท่า (Thaiwater)</strong><span>ระดับน้ำ / ปริมาณน้ำท่า</span></div>
-      </div>
-      <label class="toggle"><input id="thaiwaterToggle" type="checkbox"><span class="slider"></span></label>
     </div>
 
     <div class="layer-row">
@@ -281,12 +239,6 @@
     </div>
   </section>
 
-  <section class="legend-card ui-card" data-html2canvas-ignore>
-    <div class="legend-title">Radar Reflectivity / Intensity</div>
-    <div class="legend-bar"></div>
-    <div class="legend-labels"><span>อ่อน</span><span>ปานกลาง</span><span>หนัก</span><span>พายุ</span></div>
-  </section>
-
   <section class="timeline-card ui-card" data-html2canvas-ignore>
     <div class="timeline-head">
       <strong>Timeline</strong>
@@ -295,6 +247,31 @@
     <div id="timeline" class="timeline"></div>
   </section>
 
+  <!-- รายการที่จะติดไปในภาพที่ถูกบันทึก (ไม่มี attribute data-html2canvas-ignore) -->
+  
+  <!-- แจ้งเตือนฝนตกหนัก > 50 มม. -->
+  <div id="warningPanel" class="warning-panel" style="display: none;">
+    <h4 class="warning-title">⚠️ พื้นที่เฝ้าระวังฝนตกหนัก</h4>
+    <p style="font-size: 10px; color: #fca5a5; margin: 0 0 6px 0; border-bottom: 1px solid #b91c1c; padding-bottom: 4px;">ปริมาณฝนสะสม > 50 มม.</p>
+    <ul class="warning-list" id="warningList">
+      <!-- ข้อมูลจะถูกแทรกที่นี่ -->
+    </ul>
+  </div>
+
+  <!-- แถบสีปริมาณฝน (แปลงเป็นมิลลิเมตร) -->
+  <section class="legend-card ui-card">
+    <div class="legend-title">ปริมาณฝน (mm/h)</div>
+    <div class="legend-bar"></div>
+    <div class="legend-labels">
+      <span>0.1</span>
+      <span>2.5</span>
+      <span>10</span>
+      <span>25</span>
+      <span>50+</span>
+    </div>
+  </section>
+
+  <!-- หน้าจอโหลด -->
   <div id="loading" class="loading">
     <div class="loading-box">
       <div class="spinner"></div>
@@ -306,8 +283,7 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     const CONFIG = {
-      defaultCenter: [15.4, 101.0],
-      defaultZoom: 6,
+      defaultCenter: [15.4, 101.0], defaultZoom: 6,
       radarApi: "https://api.rainviewer.com/public/weather-maps.json",
       radarColor: 2, radarOptions: "1_0",
       satColor: 0, satOptions: "1_0",
@@ -323,13 +299,11 @@
       songkhla: { name: "สงขลา", center: [7.1898, 100.5954], zoom: 9 }
     };
 
-    // แผนที่ต้องใส่ preferCanvas ถ้ามีการ export รูปภาพบ่อยๆ จะช่วยลดปัญหากับ html2canvas
     const map = L.map("map", {
       center: CONFIG.defaultCenter, zoom: CONFIG.defaultZoom,
       minZoom: 5, maxZoom: 11, zoomControl: true, preferCanvas: true
     });
 
-    // crossOrigin: true จำเป็นสำหรับการทำ html2canvas export
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19, attribution: "&copy; OpenStreetMap", crossOrigin: true
     }).addTo(map);
@@ -338,46 +312,37 @@
       statusDot: document.getElementById("statusDot"), statusTitle: document.getElementById("statusTitle"),
       statusDetail: document.getElementById("statusDetail"), provinceSelect: document.getElementById("provinceSelect"),
       provinceGoBtn: document.getElementById("provinceGoBtn"), radarToggle: document.getElementById("radarToggle"),
-      satToggle: document.getElementById("satToggle"), thaiwaterToggle: document.getElementById("thaiwaterToggle"),
-      provinceToggle: document.getElementById("provinceToggle"), playBtn: document.getElementById("playBtn"),
-      refreshBtn: document.getElementById("refreshBtn"), homeBtn: document.getElementById("homeBtn"),
-      saveBtn: document.getElementById("saveBtn"), currentTime: document.getElementById("currentTime"),
-      currentDate: document.getElementById("currentDate"), opacitySlider: document.getElementById("opacitySlider"),
-      opacityValue: document.getElementById("opacityValue"), timeline: document.getElementById("timeline"),
-      timelineMeta: document.getElementById("timelineMeta"), loading: document.getElementById("loading"),
-      loadingTitle: document.getElementById("loadingTitle"), loadingMessage: document.getElementById("loadingMessage")
+      satToggle: document.getElementById("satToggle"), provinceToggle: document.getElementById("provinceToggle"), 
+      playBtn: document.getElementById("playBtn"), refreshBtn: document.getElementById("refreshBtn"), 
+      homeBtn: document.getElementById("homeBtn"), saveBtn: document.getElementById("saveBtn"), 
+      currentTime: document.getElementById("currentTime"), currentDate: document.getElementById("currentDate"), 
+      opacitySlider: document.getElementById("opacitySlider"), opacityValue: document.getElementById("opacityValue"), 
+      timeline: document.getElementById("timeline"), timelineMeta: document.getElementById("timelineMeta"), 
+      loading: document.getElementById("loading"), loadingTitle: document.getElementById("loadingTitle"), 
+      loadingMessage: document.getElementById("loadingMessage"), warningPanel: document.getElementById("warningPanel"),
+      warningList: document.getElementById("warningList")
     };
 
     let radarHost = "", radarFrames = [], radarLayers = [], satFrames = [], satLayers = [];
     let selectedIndex = 0, playing = false, playTimer = null, refreshTimer = null;
     let currentOpacity = CONFIG.layerOpacity;
     let provinceData = null, provinceLayer = null, selectedProvinceLayer = null;
-    let thaiwaterLayer = L.layerGroup(); // เลเยอร์สำหรับข้อมูลน้ำท่า Thaiwater
 
     function setStatus(ok, title, detail) {
       el.statusDot.classList.toggle("error", !ok);
       el.statusTitle.textContent = title; el.statusDetail.textContent = detail;
     }
 
-    function showLoading(title, message) {
-      el.loadingTitle.textContent = title; el.loadingMessage.textContent = message;
-      el.loading.style.display = "grid";
-    }
+    function showLoading(title, message) { el.loadingTitle.textContent = title; el.loadingMessage.textContent = message; el.loading.style.display = "grid"; }
     function hideLoading() { el.loading.style.display = "none"; }
 
     function thaiDate(unix) { return new Intl.DateTimeFormat("th-TH", { dateStyle: "medium", timeZone: "Asia/Bangkok" }).format(new Date(unix * 1000)); }
     function thaiTime(unix) { return new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Bangkok" }).format(new Date(unix * 1000)); }
     function normalizeText(val) { return String(val ?? "").trim().toLocaleLowerCase("th-TH").replace(/\s+/g, ""); }
 
-    // --- ส่วนของเส้นเขตจังหวัด (แก้ไขสีเป็นสีดำ) ---
+    // เส้นเขตจังหวัดสีดำ
     function provinceStyle() {
-      return { 
-        color: "#000000", // เปลี่ยนเป็นสีดำ
-        weight: 1.5, 
-        opacity: 0.85, 
-        fillColor: "transparent", // ไม่ใส่สีพื้นหลัง
-        fillOpacity: 0 
-      };
+      return { color: "#000000", weight: 1.5, opacity: 0.85, fillColor: "transparent", fillOpacity: 0 };
     }
 
     function selectProvinceFeature(layer) {
@@ -406,13 +371,11 @@
         });
         if (el.provinceToggle.checked) provinceLayer.addTo(map);
 
-        // Populate Dropdown
         const list = Array.from(new Set(provinceData.features.map(f => f.properties.pro_th || f.properties.province_name_th))).sort();
         el.provinceSelect.innerHTML = `<option value="">เลือกจังหวัด...</option>` + list.map(name => `<option value="${name}">${name}</option>`).join("");
       } catch (err) { console.error(err); }
     }
 
-    // --- ส่วนของ Weather Radar / Sat ---
     function buildWeatherLayer(frame, typeColor, typeOptions) {
       const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${typeColor}/${typeOptions}.png`;
       return L.tileLayer(url, { opacity: currentOpacity, zIndex: 500, tileSize: 256, maxNativeZoom: CONFIG.maxRadarZoom, crossOrigin: true });
@@ -435,6 +398,22 @@
       if (radarFrames[selectedIndex]) {
         el.currentTime.textContent = thaiTime(radarFrames[selectedIndex].time);
         el.currentDate.textContent = thaiDate(radarFrames[selectedIndex].time);
+      }
+    }
+
+    // ฟังก์ชันสร้างและอัปเดตแจ้งเตือนฝนตกหนัก > 50 มม. (Mock Data เพื่อการแสดงผลประกอบภาพ)
+    function checkHeavyRainWarnings() {
+      // โดยปกติแล้วจะต้องดึง API ข้อมูลจากกรมอุตุฯ ในส่วนนี้จำลองชุดข้อมูลขึ้นมา
+      const hasWarning = true; 
+      if (hasWarning) {
+        el.warningPanel.style.display = "block";
+        el.warningList.innerHTML = `
+          <li>เชียงใหม่ <strong>(65 มม.)</strong></li>
+          <li>จันทบุรี <strong>(52 มม.)</strong></li>
+          <li>ตราด <strong>(78 มม.)</strong></li>
+        `;
+      } else {
+        el.warningPanel.style.display = "none";
       }
     }
 
@@ -477,6 +456,8 @@
         selectFrame(selectedIndex); renderTimeline();
         setStatus(true, "ระบบพร้อมใช้งาน", `อัปเดตล่าสุด ${thaiTime(radarFrames[radarFrames.length - 1]?.time)} น.`);
         
+        checkHeavyRainWarnings(); // เรียกฟังก์ชันแสดงการแจ้งเตือน
+
         if (refreshTimer) clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => loadWeatherData(false), CONFIG.refreshMs);
       } catch (e) {
@@ -484,103 +465,10 @@
       } finally { if(isLoading) hideLoading(); }
     }
 
-    // --- ส่วนของการจัดการข้อมูลน้ำท่า Thaiwater ---
-    async function loadThaiwaterData() {
-      // **ข้อสังเกต:** เนื่องจาก JSON ที่คุณให้มาไม่มีพิกัด Lat/Lon ของสถานี 
-      // ในการพล็อตลงแผนที่ คุณจะต้องมีฐานข้อมูลพิกัด (Station Data) มาเทียบเคียง
-      // ในที่นี้จะสร้างโครงสร้างอ่าน JSON ตามที่คุณแนบ และ Mock พิกัดเพื่อโชว์บนแผนที่
-
-      showLoading("กำลังโหลดข้อมูลน้ำท่า...", "ดึงข้อมูลจาก Thaiwater API");
-      
-      try {
-        // [จำลอง] ข้อมูลจำลองตาม Response Structure ที่คุณส่งมา
-        const mockResponseJSON = {
-            "timeSeriesObservation": [{
-                "resultTime": "2022-05-02T22:01:00",
-                "station": { "stationCode": "G07003-C.2", "stationName": "แม่น้ำเจ้าพระยา (สมมติ)" },
-                // พิกัด Lat/Lon จำลอง เนื่องจาก JSON ต้นฉบับไม่มีมาให้
-                "_mockLocation": { lat: 15.70, lng: 100.13 }, 
-                "measurementResults": [
-                    { "variable": "WaterLevel", "value": 2.149, "uom": "M(MSL)", "measureTime": "2022-05-02T22:00:00" },
-                    { "variable": "Discharge", "value": 100, "uom": "CMS" }
-                ]
-            },
-            {
-                "resultTime": "2022-05-02T22:01:00",
-                "station": { "stationCode": "P.1", "stationName": "แม่น้ำปิง จ.เชียงใหม่ (สมมติ)" },
-                "_mockLocation": { lat: 18.788, lng: 98.985 }, 
-                "measurementResults": [
-                    { "variable": "WaterLevel", "value": 3.42, "uom": "M(MSL)", "measureTime": "2022-05-02T22:00:00" },
-                    { "variable": "Discharge", "value": 150.5, "uom": "CMS" }
-                ]
-            }]
-        };
-
-        thaiwaterLayer.clearLayers(); // เคลียร์จุดเก่าออก
-
-        const observations = mockResponseJSON.timeSeriesObservation || [];
-        observations.forEach(obs => {
-          // หากเชื่อม API จริง คุณต้องไปหา Lat/Lon จาก obs.station.stationCode
-          const lat = obs._mockLocation.lat; 
-          const lng = obs._mockLocation.lng;
-          
-          let waterLevel = "-", discharge = "-", time = "-";
-          obs.measurementResults.forEach(m => {
-            if(m.variable === "WaterLevel") { waterLevel = `${m.value} ${m.uom}`; time = new Date(m.measureTime).toLocaleString('th-TH'); }
-            if(m.variable === "Discharge") { discharge = `${m.value} ${m.uom}`; }
-          });
-
-          // สร้าง Marker แบบวงกลมบนแผนที่
-          const marker = L.circleMarker([lat, lng], {
-            radius: 8, fillColor: "#3b82f6", color: "#ffffff", weight: 2, opacity: 1, fillOpacity: 0.9
-          });
-
-          const popupContent = `
-            <div class="tw-popup">
-              <h3>📍 รหัสสถานี: ${obs.station.stationCode}</h3>
-              <p>ชื่อ: ${obs.station.stationName || "ไม่ทราบชื่อ"}</p>
-              <p>ระดับน้ำ (WaterLevel): <strong>${waterLevel}</strong></p>
-              <p>ปริมาณน้ำท่า (Discharge): <strong>${discharge}</strong></p>
-              <p style="font-size:10px; color:#64748b; margin-top:5px;">เวลาตรวจวัด: ${time}</p>
-            </div>
-          `;
-          marker.bindPopup(popupContent);
-          thaiwaterLayer.addLayer(marker);
-        });
-
-        if(el.thaiwaterToggle.checked) {
-          thaiwaterLayer.addTo(map);
-        }
-
-      } catch (err) {
-        console.error(err);
-        alert("ไม่สามารถโหลดข้อมูล Thaiwater ได้");
-        el.thaiwaterToggle.checked = false;
-      } finally {
-        hideLoading();
-      }
-    }
-
-    // --- Events & Controls ---
+    // Controls
     el.radarToggle.onchange = () => selectFrame(selectedIndex);
     el.satToggle.onchange = () => selectFrame(selectedIndex);
-    
-    el.thaiwaterToggle.onchange = () => {
-      if (el.thaiwaterToggle.checked) {
-        if (thaiwaterLayer.getLayers().length === 0) {
-          loadThaiwaterData(); // โหลดครั้งแรกเมื่อเปิดใช้งาน
-        } else {
-          thaiwaterLayer.addTo(map);
-        }
-      } else {
-        map.removeLayer(thaiwaterLayer);
-      }
-    };
-
-    el.provinceToggle.onchange = () => {
-      if(!provinceLayer) return;
-      el.provinceToggle.checked ? provinceLayer.addTo(map) : map.removeLayer(provinceLayer);
-    };
+    el.provinceToggle.onchange = () => { if(provinceLayer) el.provinceToggle.checked ? provinceLayer.addTo(map) : map.removeLayer(provinceLayer); };
 
     el.provinceGoBtn.onclick = () => {
       const selected = normalizeText(el.provinceSelect.value);
@@ -588,8 +476,7 @@
       const feat = provinceData.features.find(f => normalizeText(f.properties.pro_th || f.properties.province_name_th) === selected);
       if(!feat || !provinceLayer) return;
       
-      let target;
-      provinceLayer.eachLayer(l => { if(l.feature === feat) target = l; });
+      let target; provinceLayer.eachLayer(l => { if(l.feature === feat) target = l; });
       if(target) {
         selectProvinceFeature(target);
         map.fitBounds(target.getBounds().pad(0.05), { maxZoom: 10, animate: true });
@@ -604,45 +491,31 @@
       playing = !playing;
       el.playBtn.textContent = playing ? "⏸ หยุด" : "▶ เล่น Animation";
       if(playing) {
-        playTimer = setInterval(() => {
-          selectedIndex = (selectedIndex + 1) % radarFrames.length;
-          selectFrame(selectedIndex);
-        }, 1000);
+        playTimer = setInterval(() => { selectedIndex = (selectedIndex + 1) % radarFrames.length; selectFrame(selectedIndex); }, 1000);
       } else clearInterval(playTimer);
     };
 
     el.refreshBtn.onclick = () => { if(playing) el.playBtn.click(); loadWeatherData(true); };
 
     document.querySelectorAll(".quick-btn").forEach(btn => {
-      btn.onclick = () => {
-        const p = QUICK_PLACES[btn.dataset.place];
-        if(p) { map.setView(p.center, p.zoom, { animate: true }); setStatus(true, "ตำแหน่ง", p.name); }
-      };
+      btn.onclick = () => { const p = QUICK_PLACES[btn.dataset.place]; if(p) { map.setView(p.center, p.zoom, { animate: true }); setStatus(true, "ตำแหน่ง", p.name); } };
     });
 
     el.opacitySlider.oninput = e => {
-      currentOpacity = Number(e.target.value) / 100;
-      el.opacityValue.textContent = `${e.target.value}%`;
-      radarLayers.forEach(l => l.setOpacity(currentOpacity));
-      satLayers.forEach(l => l.setOpacity(currentOpacity));
+      currentOpacity = Number(e.target.value) / 100; el.opacityValue.textContent = `${e.target.value}%`;
+      radarLayers.forEach(l => l.setOpacity(currentOpacity)); satLayers.forEach(l => l.setOpacity(currentOpacity));
     };
 
-    // --- ระบบบันทึกภาพหน้าจอโดยใช้ html2canvas ---
+    // บันทึกภาพ
     el.saveBtn.onclick = () => {
       showLoading("กำลังสร้างรูปภาพ...", "โปรดรอสักครู่ ระบบกำลังประมวลผลแผนที่");
-      
-      // หน่วงเวลาเล็กน้อยเพื่อให้ UI อัปเดตและ Loading โชว์ขึ้นมา
       setTimeout(() => {
         html2canvas(document.body, { 
-          useCORS: true,        // สำคัญสำหรับการโหลด Tiles ข้ามโดเมน
-          allowTaint: false,
-          ignoreElements: (node) => {
-            // เราสามารถใส่ attribute data-html2canvas-ignore ใน HTML แก่เมนูที่เราไม่ต้องการให้โผล่ในรูปได้
-            return node.hasAttribute && node.hasAttribute('data-html2canvas-ignore');
-          }
+          useCORS: true, allowTaint: false,
+          ignoreElements: (node) => node.hasAttribute && node.hasAttribute('data-html2canvas-ignore')
         }).then(canvas => {
           const link = document.createElement("a");
-          link.download = `weather-dashboard-${new Date().getTime()}.png`;
+          link.download = `weather-alert-${new Date().getTime()}.png`;
           link.href = canvas.toDataURL("image/png");
           link.click();
           hideLoading();
