@@ -1,104 +1,813 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ระบบติดตามสภาพอากาศ เรดาร์ฝน และน้ำท่วม</title>
-    <style>
-        body { margin: 0; font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f6f9; }
-        header { background-color: #1e293b; color: white; padding: 15px; text-align: center; }
-        
-        .container { 
-            max-width: 1200px; 
-            margin: 20px auto; 
-            padding: 0 15px; 
-            display: flex; 
-            flex-direction: column; 
-            gap: 25px; 
-        }
-        
-        .map-section {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        
-        .map-section h3 {
-            margin-top: 0;
-            margin-bottom: 12px;
-            color: #1e293b;
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b1220" />
+  <title>Chiang Mai Weather Radar</title>
 
-        iframe {
-            width: 100%;
-            height: 550px;
-            border: 0;
-            border-radius: 8px;
-        }
+  <!-- Leaflet -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
 
-        .info-panel { 
-            padding: 15px; 
-            background: white; 
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
-            display: flex; 
-            gap: 10px; 
-            justify-content: center; 
-            position: sticky;
-            bottom: 0;
-            z-index: 1000;
-        }
-        
-        .btn { 
-            padding: 12px 20px; 
-            border: none; 
-            background-color: #059669; 
-            color: white; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            text-decoration: none; 
-            display: inline-block; 
-            font-size: 16px;
-        }
-        .btn:hover { background-color: #047857; }
-    </style>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: rgba(15, 23, 42, 0.94);
+      --panel-2: rgba(30, 41, 59, 0.92);
+      --border: rgba(148, 163, 184, 0.22);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --ok: #4ade80;
+      --danger: #fb7185;
+      --shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans Thai", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #dbeafe;
+    }
+
+    .topbar {
+      position: fixed;
+      z-index: 1000;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .brand,
+    .status-card,
+    .control-card,
+    .timeline-card,
+    .legend-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      pointer-events: auto;
+      padding: 11px 15px;
+      border-radius: 14px;
+      min-width: 280px;
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+
+    .brand-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .status-card {
+      pointer-events: auto;
+      padding: 9px 13px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 190px;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--ok);
+      box-shadow: 0 0 0 4px rgba(74, 222, 128, .10);
+      flex: 0 0 auto;
+    }
+
+    .status-dot.error {
+      background: var(--danger);
+      box-shadow: 0 0 0 4px rgba(251, 113, 133, .10);
+    }
+
+    .status-text {
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .status-text strong {
+      display: block;
+      font-size: 13px;
+    }
+
+    .control-card {
+      position: fixed;
+      z-index: 1000;
+      left: 14px;
+      top: 94px;
+      width: 280px;
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .control-title {
+      font-weight: 800;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .control-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 11px;
+      color: white;
+      background: #1e293b;
+      cursor: pointer;
+      font: inherit;
+      font-size: 13px;
+      transition: transform .12s ease, background .12s ease;
+    }
+
+    button:hover { background: #334155; }
+    button:active { transform: translateY(1px); }
+
+    button.primary {
+      background: #0284c7;
+    }
+
+    button.primary:hover {
+      background: #0369a1;
+    }
+
+    button.active {
+      background: #0369a1;
+    }
+
+    .field {
+      margin-top: 8px;
+    }
+
+    .field label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+
+    .time-big {
+      font-size: 25px;
+      font-weight: 800;
+      margin: 2px 0;
+    }
+
+    .time-small {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .timeline-card {
+      position: fixed;
+      z-index: 1000;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      width: min(920px, calc(100vw - 30px));
+      border-radius: 16px;
+      padding: 12px 14px 10px;
+    }
+
+    .timeline-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+
+    .timeline-head strong {
+      font-size: 13px;
+    }
+
+    .timeline-meta {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .timeline {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      padding-bottom: 3px;
+      scrollbar-width: thin;
+    }
+
+    .frame-btn {
+      flex: 0 0 auto;
+      min-width: 76px;
+      padding: 7px 9px;
+      font-size: 11px;
+      color: #cbd5e1;
+    }
+
+    .frame-btn.selected {
+      background: #0284c7;
+      color: white;
+      outline: 2px solid rgba(56, 189, 248, .30);
+    }
+
+    .legend-card {
+      position: fixed;
+      z-index: 1000;
+      right: 14px;
+      bottom: 96px;
+      width: 220px;
+      border-radius: 15px;
+      padding: 11px 12px 12px;
+    }
+
+    .legend-title {
+      font-size: 12px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .legend-bar {
+      height: 11px;
+      border-radius: 999px;
+      background:
+        linear-gradient(
+          90deg,
+          #6cd1eb 0%,
+          #00a3e0 16%,
+          #007fb4 28%,
+          #005588 38%,
+          #ffee00 52%,
+          #ffb700 62%,
+          #ff4400 74%,
+          #c10000 85%,
+          #760000 94%,
+          #ffafff 100%
+        );
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 4px;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 9px;
+    }
+
+    .credits {
+      position: fixed;
+      z-index: 1000;
+      left: 14px;
+      bottom: 18px;
+      max-width: 320px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 10px;
+      color: #cbd5e1;
+      background: rgba(2, 6, 23, .78);
+      border: 1px solid rgba(148,163,184,.18);
+    }
+
+    .credits a {
+      color: #7dd3fc;
+      text-decoration: none;
+    }
+
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      display: grid;
+      place-items: center;
+      background: rgba(2, 6, 23, .52);
+      backdrop-filter: blur(3px);
+    }
+
+    .loading-box {
+      width: min(360px, calc(100vw - 40px));
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .spinner {
+      width: 28px;
+      height: 28px;
+      margin: 0 auto 10px;
+      border: 3px solid rgba(255,255,255,.18);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .leaflet-control-attribution {
+      font-size: 9px !important;
+    }
+
+    @media (max-width: 700px) {
+      .topbar {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+      }
+
+      .brand {
+        min-width: 0;
+        padding: 9px 11px;
+      }
+
+      .brand-title { font-size: 15px; }
+      .brand-subtitle { font-size: 10px; }
+
+      .status-card {
+        min-width: 0;
+        padding: 8px 10px;
+      }
+
+      .status-text strong { font-size: 11px; }
+      .status-text { font-size: 10px; }
+
+      .control-card {
+        left: 8px;
+        top: 76px;
+        width: calc(100vw - 16px);
+        padding: 11px;
+      }
+
+      .control-card .advanced {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .control-card .advanced .field {
+        flex: 1 1 160px;
+        min-width: 150px;
+      }
+
+      .legend-card {
+        right: 8px;
+        bottom: 105px;
+        width: 190px;
+      }
+
+      .credits {
+        left: 8px;
+        bottom: 8px;
+        max-width: 250px;
+      }
+
+      .timeline-card {
+        bottom: 8px;
+        padding: 9px 10px 8px;
+      }
+    }
+  </style>
 </head>
+
 <body>
+  <div id="map"></div>
 
-    <header>
-        <h2>⛈️ ระบบติดตามสภาพอากาศ เรดาร์ฝน และน้ำท่วม</h2>
-    </header>
-
-    <div class="container">
-        
-        <!-- กล่องที่ 1: แก้ไขลิงก์เป็น embed.windy.com เพื่อแสดงเรดาร์ฝนประเทศไทย -->
-        <div class="map-section">
-            <h3>📡 1. เรดาร์ตรวจฝนและพายุเรียลไทม์ (ประเทศไทย)</h3>
-            <iframe 
-              src="https://windy.com" 
-              allow="geolocation"
-              loading="lazy">
-            </iframe>
-        </div>
-
-        <!-- กล่องที่ 2: แก้ไขลิงก์เป็น embed.windy.com เพื่อแสดงแผนที่กระแสลมและพายุ -->
-        <div class="map-section">
-            <h3>💨 2. แผนที่กระแสลม ความกดอากาศ และอุณหภูมิ</h3>
-            <iframe 
-              src="https://windy.com" 
-              allow="geolocation"
-              loading="lazy">
-            </iframe>
-        </div>
-
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-title">🌧 Chiang Mai Weather Radar</div>
+      <div class="brand-subtitle">Live precipitation monitoring • Northern Thailand</div>
     </div>
 
-    <!-- แผงปุ่มลิงก์ข้อมูลน้ำท่วมด้านล่าง -->
-    <div class="info-panel">
-        <a href="https://thaiwater.net" target="_blank" class="btn">🔗 ดูคลังข้อมูลน้ำและสถานการณ์น้ำท่วม (ThaiWater)</a>
+    <div class="status-card">
+      <div id="statusDot" class="status-dot"></div>
+      <div class="status-text">
+        <strong id="statusTitle">กำลังเชื่อมต่อข้อมูล...</strong>
+        <span id="statusDetail">RainViewer Weather Maps API</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="control-card">
+    <div class="control-title">Radar Controls</div>
+
+    <div class="control-row">
+      <button id="playBtn" class="primary">▶ เล่น Radar</button>
+      <button id="refreshBtn">↻ รีเฟรช</button>
+      <button id="homeBtn">⌂ เชียงใหม่</button>
     </div>
 
+    <div class="time-big" id="currentTime">--:--</div>
+    <div class="time-small" id="currentDate">--</div>
+
+    <div class="advanced">
+      <div class="field">
+        <label>
+          <span>ความโปร่งใส Radar</span>
+          <span id="opacityValue">72%</span>
+        </label>
+        <input id="opacitySlider" type="range" min="0" max="100" value="72" />
+      </div>
+
+      <div class="field">
+        <label>
+          <span>ความเร็ว Animation</span>
+          <span id="speedValue">1.0 s</span>
+        </label>
+        <input id="speedSlider" type="range" min="300" max="2500" step="100" value="1000" />
+      </div>
+    </div>
+  </section>
+
+  <section class="legend-card">
+    <div class="legend-title">Radar Reflectivity / Intensity</div>
+    <div class="legend-bar"></div>
+    <div class="legend-labels">
+      <span>อ่อน</span>
+      <span>ฝนปานกลาง</span>
+      <span>หนัก</span>
+      <span>พายุ</span>
+    </div>
+  </section>
+
+  <section class="timeline-card">
+    <div class="timeline-head">
+      <strong>Radar Timeline</strong>
+      <span id="timelineMeta" class="timeline-meta">กำลังโหลด...</span>
+    </div>
+    <div id="timeline" class="timeline"></div>
+  </section>
+
+  <div class="credits">
+    Map © OpenStreetMap contributors · Weather data by
+    <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>
+  </div>
+
+  <div id="loading" class="loading">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <strong>กำลังโหลดข้อมูล Radar...</strong>
+      <div id="loadingMessage" style="margin-top:6px;color:#94a3b8;font-size:12px;">
+        กำลังติดต่อ RainViewer API
+      </div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    const CONFIG = {
+      center: [18.7883, 98.9853],   // Chiang Mai City
+      zoom: 8,
+      maxRadarZoom: 7,
+      radarApi: "https://api.rainviewer.com/public/weather-maps.json",
+      radarColor: 2,                 // Universal Blue
+      radarOptions: "1_0",           // smooth=1, snow=0
+      refreshMs: 5 * 60 * 1000,
+      defaultOpacity: 0.72
+    };
+
+    const map = L.map("map", {
+      center: CONFIG.center,
+      zoom: CONFIG.zoom,
+      zoomControl: true,
+      minZoom: 5,
+      maxZoom: 11,
+      worldCopyJump: true
+    });
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Province-area reference marker.
+    const chiangMaiMarker = L.marker(CONFIG.center)
+      .addTo(map)
+      .bindPopup("<strong>Chiang Mai</strong><br>ศูนย์กลางการแสดงผล Radar");
+
+    let radarFrames = [];
+    let radarLayers = [];
+    let selectedIndex = 0;
+    let playing = false;
+    let timer = null;
+    let refreshTimer = null;
+    let radarHost = "";
+    let radarOpacity = CONFIG.defaultOpacity;
+
+    const el = {
+      statusDot: document.getElementById("statusDot"),
+      statusTitle: document.getElementById("statusTitle"),
+      statusDetail: document.getElementById("statusDetail"),
+      playBtn: document.getElementById("playBtn"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      homeBtn: document.getElementById("homeBtn"),
+      currentTime: document.getElementById("currentTime"),
+      currentDate: document.getElementById("currentDate"),
+      opacitySlider: document.getElementById("opacitySlider"),
+      opacityValue: document.getElementById("opacityValue"),
+      speedSlider: document.getElementById("speedSlider"),
+      speedValue: document.getElementById("speedValue"),
+      timeline: document.getElementById("timeline"),
+      timelineMeta: document.getElementById("timelineMeta"),
+      loading: document.getElementById("loading"),
+      loadingMessage: document.getElementById("loadingMessage")
+    };
+
+    function setStatus(ok, title, detail) {
+      el.statusDot.classList.toggle("error", !ok);
+      el.statusTitle.textContent = title;
+      el.statusDetail.textContent = detail;
+    }
+
+    function thaiDate(unixSeconds) {
+      return new Intl.DateTimeFormat("th-TH", {
+        dateStyle: "medium",
+        timeZone: "Asia/Bangkok"
+      }).format(new Date(unixSeconds * 1000));
+    }
+
+    function thaiTime(unixSeconds) {
+      return new Intl.DateTimeFormat("th-TH", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+        timeZone: "Asia/Bangkok"
+      }).format(new Date(unixSeconds * 1000));
+    }
+
+    function formatFrameLabel(frame, index) {
+      return `${thaiTime(frame.time)}<br><small>${index + 1}</small>`;
+    }
+
+    function buildRadarLayer(frame) {
+      const urlTemplate =
+        `${radarHost}${frame.path}/256/{z}/{x}/{y}/${CONFIG.radarColor}/${CONFIG.radarOptions}.png`;
+
+      return L.tileLayer(urlTemplate, {
+        tileSize: 256,
+        opacity: radarOpacity,
+        zIndex: 500,
+        updateWhenIdle: true,
+        keepBuffer: 1,
+        noWrap: false,
+        maxNativeZoom: CONFIG.maxRadarZoom,
+        maxZoom: 11,
+        attribution: 'Weather data by <a href="https://www.rainviewer.com/" target="_blank" rel="noopener">RainViewer</a>'
+      });
+    }
+
+    function clearRadarLayers() {
+      radarLayers.forEach(layer => {
+        if (map.hasLayer(layer)) map.removeLayer(layer);
+      });
+      radarLayers = [];
+    }
+
+    function renderTimeline() {
+      el.timeline.innerHTML = "";
+
+      radarFrames.forEach((frame, idx) => {
+        const button = document.createElement("button");
+        button.className = "frame-btn";
+        button.innerHTML = formatFrameLabel(frame, idx);
+        button.title = `Radar ${thaiDate(frame.time)} ${thaiTime(frame.time)}`;
+        button.addEventListener("click", () => selectFrame(idx));
+        el.timeline.appendChild(button);
+      });
+
+      updateTimelineSelection();
+    }
+
+    function updateTimelineSelection() {
+      [...el.timeline.children].forEach((node, idx) => {
+        node.classList.toggle("selected", idx === selectedIndex);
+      });
+      const selected = radarFrames[selectedIndex];
+      if (!selected) return;
+      el.currentTime.textContent = thaiTime(selected.time);
+      el.currentDate.textContent = thaiDate(selected.time);
+    }
+
+    function selectFrame(index) {
+      if (!radarFrames.length) return;
+
+      selectedIndex = Math.max(0, Math.min(index, radarFrames.length - 1));
+
+      radarLayers.forEach((layer, idx) => {
+        if (idx === selectedIndex) {
+          if (!map.hasLayer(layer)) layer.addTo(map);
+        } else {
+          if (map.hasLayer(layer)) map.removeLayer(layer);
+        }
+      });
+
+      updateTimelineSelection();
+
+      const selected = radarFrames[selectedIndex];
+      el.timelineMeta.textContent =
+        `ย้อนหลัง ${radarFrames.length} ภาพ • ${thaiTime(selected.time)} น.`;
+
+      if (selectedIndex === radarFrames.length - 1 && playing) {
+        // At the newest available radar image, pause rather than pretending
+        // that future/nowcast imagery exists.
+        stopAnimation();
+      }
+    }
+
+    function startAnimation() {
+      if (!radarFrames.length) return;
+      playing = true;
+      el.playBtn.textContent = "⏸ หยุด Radar";
+      el.playBtn.classList.add("active");
+
+      clearInterval(timer);
+      const speed = Number(el.speedSlider.value);
+
+      timer = setInterval(() => {
+        const next = (selectedIndex + 1) % radarFrames.length;
+        selectFrame(next);
+      }, speed);
+    }
+
+    function stopAnimation() {
+      playing = false;
+      el.playBtn.textContent = "▶ เล่น Radar";
+      el.playBtn.classList.remove("active");
+      clearInterval(timer);
+      timer = null;
+    }
+
+    function toggleAnimation() {
+      if (playing) stopAnimation();
+      else startAnimation();
+    }
+
+    async function loadRadar(showLoading = true) {
+      if (showLoading) {
+        el.loading.style.display = "grid";
+        el.loadingMessage.textContent = "กำลังติดต่อ RainViewer API";
+      }
+
+      try {
+        const response = await fetch(CONFIG.radarApi, {
+          cache: "no-store"
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        if (!data.host || !data.radar || !Array.isArray(data.radar.past)) {
+          throw new Error("รูปแบบข้อมูล Radar ไม่ถูกต้อง");
+        }
+
+        radarHost = data.host;
+        radarFrames = data.radar.past;
+
+        // Newest at the right; API normally returns chronological order.
+        radarFrames.sort((a, b) => a.time - b.time);
+
+        clearRadarLayers();
+        radarLayers = radarFrames.map(buildRadarLayer);
+
+        // Start with the latest available frame.
+        selectedIndex = Math.max(0, radarFrames.length - 1);
+        selectFrame(selectedIndex);
+        renderTimeline();
+
+        const latest = radarFrames[radarFrames.length - 1];
+
+        setStatus(
+          true,
+          "Radar พร้อมใช้งาน",
+          `อัปเดตล่าสุด ${thaiTime(latest.time)} น.`
+        );
+
+        el.timelineMeta.textContent =
+          `${radarFrames.length} ภาพ • ช่วงย้อนหลังประมาณ 2 ชั่วโมง`;
+
+        if (refreshTimer) clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(() => loadRadar(false), CONFIG.refreshMs);
+
+      } catch (error) {
+        console.error(error);
+
+        setStatus(
+          false,
+          "เชื่อมต่อ Radar ไม่สำเร็จ",
+          error.message || "ไม่สามารถโหลดข้อมูลได้"
+        );
+
+        el.timelineMeta.textContent = "ไม่พบข้อมูล Radar";
+        el.loadingMessage.textContent =
+          "กรุณาตรวจสอบอินเทอร์เน็ต หรือกด “รีเฟรช” อีกครั้ง";
+
+      } finally {
+        if (showLoading) {
+          setTimeout(() => {
+            el.loading.style.display = "none";
+          }, 350);
+        }
+      }
+    }
+
+    el.playBtn.addEventListener("click", toggleAnimation);
+
+    el.refreshBtn.addEventListener("click", () => {
+      stopAnimation();
+      loadRadar(true);
+    });
+
+    el.homeBtn.addEventListener("click", () => {
+      map.setView(CONFIG.center, CONFIG.zoom, { animate: true });
+      chiangMaiMarker.openPopup();
+    });
+
+    el.opacitySlider.addEventListener("input", (e) => {
+      radarOpacity = Number(e.target.value) / 100;
+      el.opacityValue.textContent = `${e.target.value}%`;
+      radarLayers.forEach(layer => layer.setOpacity(radarOpacity));
+    });
+
+    el.speedSlider.addEventListener("input", (e) => {
+      const seconds = (Number(e.target.value) / 1000).toFixed(1);
+      el.speedValue.textContent = `${seconds} s`;
+
+      if (playing) {
+        stopAnimation();
+        startAnimation();
+      }
+    });
+
+    // Keyboard controls for desktop.
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        e.preventDefault();
+        toggleAnimation();
+      }
+
+      if (e.code === "ArrowLeft") {
+        selectFrame(selectedIndex - 1);
+      }
+
+      if (e.code === "ArrowRight") {
+        selectFrame(selectedIndex + 1);
+      }
+    });
+
+    window.addEventListener("resize", () => {
+      setTimeout(() => map.invalidateSize(), 150);
+    });
+
+    // Initial load.
+    loadRadar(true);
+  </script>
 </body>
 </html>
 
