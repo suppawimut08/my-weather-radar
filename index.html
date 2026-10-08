@@ -33,10 +33,19 @@
 
     #map { width: 100%; height: 100%; }
 
-    /* Windy Embed Container */
-    .windy-wrapper {
-      position: absolute; inset: 0; z-index: 400; display: none; background: var(--bg);
+    /* ลายน้ำวันเวลาของเรดาร์ */
+    .watermark-time {
+      position: absolute; z-index: 1050; top: 75px; left: 50%; transform: translateX(-50%);
+      padding: 8px 18px; border-radius: 30px;
+      background: rgba(15, 23, 42, 0.9); border: 1px solid rgba(148, 163, 184, 0.3);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+      display: flex; gap: 10px; align-items: center;
+      pointer-events: none;
     }
+    .watermark-time .label { color: #38bdf8; font-weight: 850; font-size: 13px; letter-spacing: 0.5px; }
+    .watermark-time .value { color: #f8fafc; font-weight: 700; font-size: 12px; }
+
+    .windy-wrapper { position: absolute; inset: 0; z-index: 400; display: none; background: var(--bg); }
 
     .ui-card {
       background: var(--panel); border: 1px solid var(--border);
@@ -47,7 +56,6 @@
       position: fixed; z-index: 1200; top: 12px; left: 12px; right: 12px;
       display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; pointer-events: none;
     }
-
     .brand { pointer-events: auto; padding: 10px 14px; border-radius: 14px; min-width: 300px; }
     .brand-title { font-size: 18px; font-weight: 850; letter-spacing: .15px; }
     .brand-subtitle { margin-top: 2px; color: var(--muted); font-size: 11px; }
@@ -63,21 +71,18 @@
     .status-text { font-size: 11px; line-height: 1.25; }
     .status-text strong { display: block; font-size: 12px; }
 
-    /* Menu Toggle Button */
     .menu-toggle-btn {
       padding: 0 13px; border-radius: 14px; background: var(--panel); border: 1px solid var(--border);
       color: white; cursor: pointer; display: grid; place-items: center; transition: background 0.2s;
     }
     .menu-toggle-btn:hover { background: #1e293b; }
 
-    /* Left Panel (Control) */
     .left-panel {
       position: fixed; z-index: 1100; top: 88px; left: 12px;
       width: 312px; max-height: calc(100vh - 185px); overflow: auto;
       border-radius: 16px; padding: 13px; scrollbar-width: thin;
       transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
     }
-    
     .left-panel.collapsed { transform: translateX(calc(-100% - 24px)); opacity: 0; pointer-events: none; }
 
     .section-title { font-size: 13px; font-weight: 850; margin-bottom: 8px; }
@@ -89,6 +94,7 @@
       background: #0f172a; border: 1px solid rgba(148,163,184,.25);
       border-radius: 10px; outline: none; font: inherit; font-size: 12px;
     }
+    select option { background: #0f172a; color: white; }
 
     button {
       border: 0; border-radius: 10px; padding: 8px 10px; color: white;
@@ -137,13 +143,11 @@
     .time-big { font-size: 23px; font-weight: 850; margin-top: 8px; }
     .time-small { color: var(--muted); font-size: 10px; }
 
-    /* UI ด้านขวาล่าง */
     .legend-card { position: fixed; z-index: 1050; right: 12px; bottom: 88px; width: 220px; border-radius: 15px; padding: 10px 11px 11px; }
     .legend-title { font-size: 11px; font-weight: 850; margin-bottom: 7px; }
     .legend-bar { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #6cd1eb 0%, #00a3e0 16%, #007fb4 28%, #005588 38%, #ffee00 52%, #ffb700 62%, #ff4400 74%, #c10000 85%, #760000 94%, #ffafff 100%); border: 1px solid rgba(255,255,255,.18); }
     .legend-labels { display: flex; justify-content: space-between; color: var(--muted); font-size: 9px; margin-top: 4px; font-weight: 600; }
 
-    /* สถิติการเยี่ยมชม */
     .stats-card { position: fixed; z-index: 1050; right: 12px; bottom: 160px; width: 220px; border-radius: 15px; padding: 10px 14px; }
     .stats-header { font-size: 11px; font-weight: 850; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
     .stats-row { display: flex; align-items: center; justify-content: space-between; }
@@ -160,12 +164,9 @@
     .frame-btn { flex: 0 0 auto; min-width: 68px; padding: 6px 8px; font-size: 10px; }
     .frame-btn.selected { background: #0284c7; outline: 2px solid rgba(56,189,248,.28); }
 
-    /* Credit Card */
     .credit-card {
       position: fixed; z-index: 1050; left: 12px; bottom: 75px;
-      padding: 8px 12px; border-radius: 12px;
-      background: rgba(15, 23, 42, 0.88);
-      pointer-events: auto;
+      padding: 8px 12px; border-radius: 12px; background: rgba(15, 23, 42, 0.88); pointer-events: auto;
     }
     .credit-text { font-size: 9.5px; color: var(--muted); line-height: 1.5; }
     .credit-text strong { color: #f8fafc; font-size: 11px; }
@@ -186,6 +187,10 @@
       .brand-subtitle { font-size: 9px; }
       .status-card { min-width: 0; padding: 7px 9px; }
       
+      .watermark-time { top: 60px; padding: 6px 14px; }
+      .watermark-time .label { font-size: 11px; }
+      .watermark-time .value { font-size: 10px; }
+
       .left-panel { top: 68px; left: 7px; width: calc(100vw - 14px); max-height: 55vh; padding: 10px; }
       
       .stats-card { right: 7px; bottom: 140px; width: 180px; padding: 8px 10px; }
@@ -201,7 +206,12 @@
 <body>
   <div id="map"></div>
 
-  <!-- โครงสร้างสำหรับแทรก Windy iframe -->
+  <!-- ลายน้ำบอกเวลาเรดาร์ (ส่วนนี้จะถูกบันทึกลงในรูปภาพด้วย) -->
+  <div id="watermarkTime" class="watermark-time">
+    <span class="label">ข้อมูลเรดาร์ฝน</span>
+    <span class="value"><span id="wmDate">--</span> เวลา <span id="wmTime">--</span></span>
+  </div>
+
   <div id="windyContainer" class="windy-wrapper" data-html2canvas-ignore>
     <iframe width="100%" height="100%" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=6&overlay=rain&product=ecmwf&level=surface&lat=15.4&lon=101.0" frameborder="0"></iframe>
   </div>
@@ -227,6 +237,20 @@
   </div>
 
   <section id="leftPanel" class="left-panel ui-card" data-html2canvas-ignore>
+    
+    <!-- เมนูเลือกรูปแบบแผนที่พื้นหลัง -->
+    <div class="section-title">รูปแบบแผนที่พื้นหลัง (Basemap)</div>
+    <div class="field" style="margin-top: 0; margin-bottom: 12px;">
+      <select id="basemapSelect">
+        <option value="osm">🗺️ แผนที่ถนน (Street)</option>
+        <option value="satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
+        <option value="terrain">⛰️ ภูมิประเทศ (Terrain)</option>
+        <option value="dark">🌙 โหมดกลางคืน (Dark)</option>
+      </select>
+    </div>
+    
+    <div class="divider"></div>
+
     <div class="section-title">ค้นหา / ไปยังจังหวัด</div>
     <div class="search-box">
       <select id="provinceSelect" aria-label="เลือกจังหวัด">
@@ -258,7 +282,7 @@
     <div class="layer-row">
       <div class="layer-info">
         <div class="swatch swatch-sat"></div>
-        <div class="layer-text"><strong>ดาวเทียม IR</strong><span>ภาพถ่ายอินฟราเรดเมฆ</span></div>
+        <div class="layer-text"><strong>เมฆดาวเทียม IR</strong><span>ภาพอินฟราเรด (RainViewer)</span></div>
       </div>
       <label class="toggle"><input id="satToggle" type="checkbox"><span class="slider"></span></label>
     </div>
@@ -298,6 +322,11 @@
       <button id="homeBtn">⌂ ทั้งประเทศ</button>
       <button id="saveBtn" class="success">📸 บันทึกภาพ</button>
     </div>
+    
+    <div class="field" style="margin-top: 12px;">
+      <label><span>ความเร็ว Animation</span><span id="speedValue">0.6 s</span></label>
+      <input id="speedSlider" type="range" min="200" max="2500" step="100" value="600" />
+    </div>
 
     <div class="time-big" id="currentTime">--:--</div>
     <div class="time-small" id="currentDate">--</div>
@@ -316,8 +345,8 @@
     <div id="timeline" class="timeline"></div>
   </section>
 
-  <!-- Credit Card -->
-  <div class="credit-card ui-card">
+  <!-- Credit Card (ไม่ติดในรูปภาพ) -->
+  <div class="credit-card ui-card" data-html2canvas-ignore="true">
     <div class="credit-text">
       <strong>จัดทำโดย</strong><br>
       หลักสูตรภูมิศาสตร์และภูมิสารสนเทศ<br>
@@ -326,8 +355,8 @@
     </div>
   </div>
 
-  <!-- สถิติการเยี่ยมชม (จำลองด้วย LocalStorage) จะติดไปตอนบันทึกภาพด้วย -->
-  <section class="stats-card ui-card">
+  <!-- สถิติการเยี่ยมชม (ไม่ติดในรูปภาพ) -->
+  <section class="stats-card ui-card" data-html2canvas-ignore="true">
     <div class="stats-header">📊 สถิติผู้ใช้งาน</div>
     <div class="stats-row">
       <div class="stat-item">
@@ -368,8 +397,8 @@
       defaultCenter: [15.4, 101.0], defaultZoom: 6,
       radarApi: "https://api.rainviewer.com/public/weather-maps.json",
       radarColor: 2, radarOptions: "1_0",
-      satColor: 0, satOptions: "1_0",
-      maxRadarZoom: 7, layerOpacity: 0.72,
+      satColor: 0, satOptions: "1_0", // 0 คือเมฆสีขาวดำ
+      layerOpacity: 0.72,
       refreshMs: 5 * 60 * 1000,
       provinceGeoJsonUrl: "https://cdn.jsdelivr.net/gh/knottx/opengisdata-thailand@master/provinces.geojson"
     };
@@ -386,9 +415,21 @@
       minZoom: 5, maxZoom: 11, zoomControl: true, preferCanvas: true
     });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19, attribution: "&copy; OpenStreetMap", crossOrigin: true
-    }).addTo(map);
+    // สร้าง Map Panes เพื่อจัดการลำดับความลึก (Z-Index) อย่างแม่นยำ
+    map.createPane('satPane');       map.getPane('satPane').style.zIndex = 350; // ลึกสุด (เมฆ)
+    map.createPane('radarPane');     map.getPane('radarPane').style.zIndex = 360; // กลาง (เรดาร์ฝน)
+    map.createPane('boundaryPane');  map.getPane('boundaryPane').style.zIndex = 450; // บนสุด (ขอบเขตจังหวัด)
+
+    // ข้อมูลแผนที่พื้นหลังต่างๆ
+    const BASEMAPS = {
+      osm: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap", crossOrigin: true }),
+      satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "&copy; Esri", crossOrigin: true }),
+      terrain: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "&copy; Esri", crossOrigin: true }),
+      dark: L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19, attribution: "&copy; CARTO", crossOrigin: true })
+    };
+    
+    let currentBasemap = BASEMAPS.osm;
+    currentBasemap.addTo(map);
 
     const el = {
       statusDot: document.getElementById("statusDot"), statusTitle: document.getElementById("statusTitle"),
@@ -399,12 +440,15 @@
       homeBtn: document.getElementById("homeBtn"), saveBtn: document.getElementById("saveBtn"), 
       currentTime: document.getElementById("currentTime"), currentDate: document.getElementById("currentDate"), 
       opacitySlider: document.getElementById("opacitySlider"), opacityValue: document.getElementById("opacityValue"), 
+      speedSlider: document.getElementById("speedSlider"), speedValue: document.getElementById("speedValue"),
       timeline: document.getElementById("timeline"), timelineMeta: document.getElementById("timelineMeta"), 
       loading: document.getElementById("loading"), loadingTitle: document.getElementById("loadingTitle"), 
       loadingMessage: document.getElementById("loadingMessage"), windyToggleBtn: document.getElementById("windyToggleBtn"),
       windyContainer: document.getElementById("windyContainer"), legendPanel: document.getElementById("legendPanel"),
       leftPanel: document.getElementById("leftPanel"), toggleMenuBtn: document.getElementById("toggleMenuBtn"),
-      todayVisits: document.getElementById("todayVisits"), totalVisits: document.getElementById("totalVisits")
+      todayVisits: document.getElementById("todayVisits"), totalVisits: document.getElementById("totalVisits"),
+      wmDate: document.getElementById("wmDate"), wmTime: document.getElementById("wmTime"), watermarkTime: document.getElementById("watermarkTime"),
+      basemapSelect: document.getElementById("basemapSelect")
     };
 
     let radarHost = "", radarFrames = [], radarLayers = [], satFrames = [], satLayers = [];
@@ -413,32 +457,34 @@
     let provinceData = null, provinceLayer = null, selectedProvinceLayer = null;
     let isWindyOpen = false;
 
-    // จำลองระบบนับจำนวนผู้เข้าชมด้วย LocalStorage
+    // เปลี่ยนแผนที่พื้นหลัง
+    el.basemapSelect.onchange = (e) => {
+      map.removeLayer(currentBasemap);
+      currentBasemap = BASEMAPS[e.target.value];
+      currentBasemap.addTo(map);
+      currentBasemap.bringToBack();
+    };
+
     function initVisitorStats() {
       let total = localStorage.getItem("weather_total_visits");
       let today = localStorage.getItem("weather_today_visits");
       let storedDate = localStorage.getItem("weather_visit_date");
       let currentDate = new Date().toDateString();
 
-      if (!total) total = 42850; // เริ่มต้นที่ตัวเลขสมมติ
+      if (!total) total = 42850;
       if (storedDate !== currentDate) {
-         today = Math.floor(Math.random() * 40) + 120; // สมมติว่ามีคนเข้า 120-160 คนต่อวัน
+         today = Math.floor(Math.random() * 40) + 120;
          localStorage.setItem("weather_visit_date", currentDate);
       }
 
-      total = parseInt(total) + 1;
-      today = parseInt(today || 120) + 1;
-
+      total = parseInt(total) + 1; today = parseInt(today || 120) + 1;
       localStorage.setItem("weather_total_visits", total);
       localStorage.setItem("weather_today_visits", today);
 
-      el.totalVisits.textContent = total.toLocaleString();
-      el.todayVisits.textContent = today.toLocaleString();
+      el.totalVisits.textContent = total.toLocaleString(); el.todayVisits.textContent = today.toLocaleString();
     }
 
-    if (window.innerWidth <= 780) {
-        el.leftPanel.classList.add("collapsed");
-    }
+    if (window.innerWidth <= 780) { el.leftPanel.classList.add("collapsed"); }
     el.toggleMenuBtn.onclick = () => { el.leftPanel.classList.toggle("collapsed"); };
 
     function setStatus(ok, title, detail) {
@@ -453,9 +499,7 @@
     function thaiTime(unix) { return new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Bangkok" }).format(new Date(unix * 1000)); }
     function normalizeText(val) { return String(val ?? "").trim().toLocaleLowerCase("th-TH").replace(/\s+/g, ""); }
 
-    function provinceStyle() {
-      return { color: "#000000", weight: 1.5, opacity: 0.85, fillColor: "transparent", fillOpacity: 0 };
-    }
+    function provinceStyle() { return { color: "#000000", weight: 1.5, opacity: 0.85, fillColor: "transparent", fillOpacity: 0 }; }
 
     function selectProvinceFeature(layer) {
       if (selectedProvinceLayer) { try { selectedProvinceLayer.setStyle(provinceStyle()); } catch(_) {} }
@@ -470,6 +514,7 @@
         provinceData = await response.json();
         provinceLayer = L.geoJSON(provinceData, { 
           style: provinceStyle, 
+          pane: "boundaryPane", // วางในลำดับบนสุด
           onEachFeature: (feature, layer) => {
             const p = feature.properties;
             const nameTh = p.pro_th || p.province_name_th || p.name_th || "";
@@ -479,7 +524,7 @@
                 const opt = [...el.provinceSelect.options].find(o => normalizeText(o.value) === normalizeText(nameTh));
                 if (opt) el.provinceSelect.value = opt.value;
             });
-          }, pane: "overlayPane" 
+          }
         });
         if (el.provinceToggle.checked) provinceLayer.addTo(map);
 
@@ -488,9 +533,17 @@
       } catch (err) { console.error(err); }
     }
 
-    function buildWeatherLayer(frame, typeColor, typeOptions) {
-      const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${typeColor}/${typeOptions}.png`;
-      return L.tileLayer(url, { opacity: currentOpacity, zIndex: 500, tileSize: 256, maxNativeZoom: CONFIG.maxRadarZoom, crossOrigin: true });
+    function buildRadarLayer(frame) {
+      const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${CONFIG.radarColor}/${CONFIG.radarOptions}.png`;
+      // Radar ซูมได้ถึงระดับ 7
+      return L.tileLayer(url, { opacity: 0, pane: "radarPane", tileSize: 256, maxNativeZoom: 7, maxZoom: 11, crossOrigin: true });
+    }
+    
+    function buildSatLayer(frame) {
+      const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${CONFIG.satColor}/${CONFIG.satOptions}.png`;
+      // *สำคัญ* Satellite IR ของ RainViewer มีภาพสูงสุดแค่ซูมระดับ 4 การตั้ง maxNativeZoom = 4 
+      // จะทำให้ Leaflet ขยายภาพ(Scale) อัตโนมัติเมื่อเราซูมเข้าไปใกล้ ทำให้เมฆโชว์ขึ้นมา!
+      return L.tileLayer(url, { opacity: 0, pane: "satPane", tileSize: 256, maxNativeZoom: 4, maxZoom: 11, crossOrigin: true });
     }
 
     function renderTimeline() {
@@ -508,8 +561,11 @@
     function updateTimelineSelection() {
       [...el.timeline.children].forEach((n, i) => n.classList.toggle("selected", i === selectedIndex));
       if (radarFrames[selectedIndex]) {
-        el.currentTime.textContent = thaiTime(radarFrames[selectedIndex].time);
-        el.currentDate.textContent = thaiDate(radarFrames[selectedIndex].time);
+        const dateStr = thaiDate(radarFrames[selectedIndex].time);
+        const timeStr = thaiTime(radarFrames[selectedIndex].time) + ' น.';
+        
+        el.currentTime.textContent = timeStr; el.currentDate.textContent = dateStr;
+        el.wmDate.textContent = dateStr; el.wmTime.textContent = timeStr;
       }
     }
 
@@ -517,18 +573,19 @@
       if (!radarFrames.length) return;
       selectedIndex = Math.max(0, Math.min(index, radarFrames.length - 1));
       const targetTime = radarFrames[selectedIndex].time;
+      
       let bestSatIdx = 0, minDiff = Infinity;
-      satFrames.forEach((sf, i) => { const diff = Math.abs(sf.time - targetTime); if (diff < minDiff) { minDiff = diff; bestSatIdx = i; } });
+      if (satFrames.length > 0) {
+        satFrames.forEach((sf, i) => { const diff = Math.abs(sf.time - targetTime); if (diff < minDiff) { minDiff = diff; bestSatIdx = i; } });
+      }
 
       radarLayers.forEach((layer, idx) => {
         const show = idx === selectedIndex && el.radarToggle.checked;
-        if (show && !map.hasLayer(layer)) layer.addTo(map);
-        if (!show && map.hasLayer(layer)) map.removeLayer(layer);
+        layer.setOpacity(show ? currentOpacity : 0);
       });
       satLayers.forEach((layer, idx) => {
         const show = idx === bestSatIdx && el.satToggle.checked;
-        if (show && !map.hasLayer(layer)) layer.addTo(map);
-        if (!show && map.hasLayer(layer)) map.removeLayer(layer);
+        layer.setOpacity(show ? currentOpacity : 0);
       });
 
       updateTimelineSelection();
@@ -545,8 +602,12 @@
         if (data.satellite && data.satellite.infrared) satFrames = data.satellite.infrared.slice().sort((a,b) => a.time - b.time);
 
         radarLayers.forEach(l => map.removeLayer(l)); satLayers.forEach(l => map.removeLayer(l));
-        radarLayers = radarFrames.map(f => buildWeatherLayer(f, CONFIG.radarColor, CONFIG.radarOptions));
-        satLayers = satFrames.map(f => buildWeatherLayer(f, CONFIG.satColor, CONFIG.satOptions));
+        
+        radarLayers = radarFrames.map(f => buildRadarLayer(f));
+        satLayers = satFrames.map(f => buildSatLayer(f));
+
+        radarLayers.forEach(l => l.addTo(map));
+        satLayers.forEach(l => l.addTo(map));
         
         selectedIndex = Math.max(0, radarFrames.length - 1);
         selectFrame(selectedIndex); renderTimeline();
@@ -559,25 +620,17 @@
       } finally { if(isLoading) hideLoading(); }
     }
 
-    // Toggle Windy
     el.windyToggleBtn.onclick = function() {
       isWindyOpen = !isWindyOpen;
       if (isWindyOpen) {
-        el.windyContainer.style.display = 'block';
-        el.legendPanel.style.display = 'none'; 
-        this.textContent = '❌ กลับไปใช้แผนที่หลัก (Radar)';
-        this.classList.remove('primary');
-        this.classList.add('danger');
+        el.windyContainer.style.display = 'block'; el.legendPanel.style.display = 'none'; el.watermarkTime.style.display = 'none'; 
+        this.textContent = '❌ กลับไปใช้แผนที่หลัก (Radar)'; this.classList.remove('primary'); this.classList.add('danger');
       } else {
-        el.windyContainer.style.display = 'none';
-        el.legendPanel.style.display = 'block';
-        this.textContent = '☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)';
-        this.classList.remove('danger');
-        this.classList.add('primary');
+        el.windyContainer.style.display = 'none'; el.legendPanel.style.display = 'block'; el.watermarkTime.style.display = 'flex';
+        this.textContent = '☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)'; this.classList.remove('danger'); this.classList.add('primary');
       }
     };
 
-    // Controls
     el.radarToggle.onchange = () => selectFrame(selectedIndex);
     el.satToggle.onchange = () => selectFrame(selectedIndex);
     el.provinceToggle.onchange = () => { if(provinceLayer) el.provinceToggle.checked ? provinceLayer.addTo(map) : map.removeLayer(provinceLayer); };
@@ -590,8 +643,7 @@
       
       let target; provinceLayer.eachLayer(l => { if(l.feature === feat) target = l; });
       if(target) {
-        selectProvinceFeature(target);
-        map.fitBounds(target.getBounds().pad(0.05), { maxZoom: 10, animate: true });
+        selectProvinceFeature(target); map.fitBounds(target.getBounds().pad(0.05), { maxZoom: 10, animate: true });
         setStatus(true, `พิกัดปัจจุบัน`, feat.properties.pro_th);
       }
     };
@@ -603,7 +655,8 @@
       playing = !playing;
       el.playBtn.textContent = playing ? "⏸ หยุด" : "▶ เล่น Animation";
       if(playing) {
-        playTimer = setInterval(() => { selectedIndex = (selectedIndex + 1) % radarFrames.length; selectFrame(selectedIndex); }, 1000);
+        const speed = Number(el.speedSlider.value) || 600;
+        playTimer = setInterval(() => { selectedIndex = (selectedIndex + 1) % radarFrames.length; selectFrame(selectedIndex); }, speed);
       } else clearInterval(playTimer);
     };
 
@@ -615,22 +668,23 @@
 
     el.opacitySlider.oninput = e => {
       currentOpacity = Number(e.target.value) / 100; el.opacityValue.textContent = `${e.target.value}%`;
-      radarLayers.forEach(l => l.setOpacity(currentOpacity)); satLayers.forEach(l => l.setOpacity(currentOpacity));
+      selectFrame(selectedIndex); 
+    };
+    
+    el.speedSlider.oninput = e => {
+      const seconds = (Number(e.target.value) / 1000).toFixed(1); el.speedValue.textContent = `${seconds} s`;
+      if (playing) {
+        clearInterval(playTimer);
+        playTimer = setInterval(() => { selectedIndex = (selectedIndex + 1) % radarFrames.length; selectFrame(selectedIndex); }, e.target.value);
+      }
     };
 
-    // บันทึกภาพ (แก้ไขปัญหาช่วงหน่วงเวลา)
     el.saveBtn.onclick = () => {
-      if (isWindyOpen) {
-        alert("⚠️ ขออภัย: เบราว์เซอร์ไม่อนุญาตให้แคปเจอร์ภาพจากหน้าต่างภายนอก (Windy) กรุณากลับไปใช้หน้าแผนที่หลักก่อนทำการบันทึกภาพครับ");
-        return;
-      }
-      
+      if (isWindyOpen) { alert("⚠️ ขออภัย: เบราว์เซอร์ไม่อนุญาตให้แคปเจอร์ภาพจากหน้าต่างภายนอก (Windy) กรุณากลับไปใช้หน้าแผนที่หลักก่อนทำการบันทึกภาพครับ"); return; }
       showLoading("กำลังสร้างรูปภาพ...", "โปรดรอสักครู่ ระบบกำลังประมวลผลแผนที่");
-      
       setTimeout(() => {
         html2canvas(document.body, { 
-          useCORS: true, 
-          allowTaint: false,
+          useCORS: true, allowTaint: false,
           ignoreElements: (node) => node.hasAttribute && node.hasAttribute('data-html2canvas-ignore')
         }).then(canvas => {
           const link = document.createElement("a");
@@ -643,7 +697,7 @@
           alert("เกิดข้อผิดพลาดในการบันทึกภาพ อาจเกิดจากข้อจำกัดการโหลดข้อมูลข้ามโดเมน (CORS) ของ Map Tiles");
           hideLoading();
         });
-      }, 500); // ดีเลย์สั้นๆ เพื่อให้ UI อัปเดตการแสดงผลให้เสร็จสิ้นก่อนเรนเดอร์ภาพ
+      }, 500); 
     };
 
     window.onresize = () => setTimeout(() => map.invalidateSize(), 150);
