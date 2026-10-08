@@ -33,6 +33,15 @@
 
     #map { width: 100%; height: 100%; }
 
+    /* Windy Embed Container */
+    .windy-wrapper {
+      position: absolute;
+      inset: 0;
+      z-index: 400; /* อยู่เหนือ map (0) แต่อยู่ใต้ panel (1100+) */
+      display: none;
+      background: var(--bg);
+    }
+
     .ui-card {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -60,11 +69,11 @@
     .status-text { font-size: 11px; line-height: 1.25; }
     .status-text strong { display: block; font-size: 12px; }
 
-    /* Warning Panel (จะไม่ถูกซ่อนตอนบันทึกภาพ) */
+    /* Warning Panel */
     .warning-panel {
       position: fixed; z-index: 1050; top: 75px; right: 12px;
       width: 220px; border-radius: 14px; padding: 12px 14px;
-      background: rgba(127, 29, 29, 0.92); /* พื้นหลังสีแดงเข้ม */
+      background: rgba(127, 29, 29, 0.92);
       border: 1px solid #ef4444;
       box-shadow: var(--shadow);
       pointer-events: auto;
@@ -100,6 +109,8 @@
     button.primary:hover { background: #0369a1; }
     button.success { background: #16a34a; }
     button.success:hover { background: #15803d; }
+    button.danger { background: #ef4444; }
+    button.danger:hover { background: #b91c1c; }
 
     .quick-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 12px; }
     .quick-btn { text-align: left; background: rgba(30, 41, 59, .96); padding: 8px 9px; }
@@ -113,7 +124,7 @@
     .swatch { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,.25); flex: 0 0 auto; }
     .swatch-radar { background: linear-gradient(90deg,#00a3e0,#005588,#ffee00,#ff4400,#c10000,#ffafff); }
     .swatch-sat { background: linear-gradient(135deg, #cbd5e1 0%, #334155 100%); }
-    .swatch-province { background: transparent; border: 2px solid #000000; } /* เส้นขอบเขตสีดำ */
+    .swatch-province { background: transparent; border: 2px solid #000000; } 
 
     .layer-text strong { display: block; font-size: 11px; }
     .layer-text span { display: block; color: var(--muted); font-size: 9px; margin-top: 1px; }
@@ -133,7 +144,6 @@
     .time-big { font-size: 23px; font-weight: 850; margin-top: 8px; }
     .time-small { color: var(--muted); font-size: 10px; }
 
-    /* Legend Card (จะไม่ถูกซ่อน) */
     .legend-card { position: fixed; z-index: 1050; right: 12px; bottom: 88px; width: 220px; border-radius: 15px; padding: 10px 11px 11px; }
     .legend-title { font-size: 11px; font-weight: 850; margin-bottom: 7px; }
     .legend-bar { height: 10px; border-radius: 999px; background: linear-gradient(90deg, #6cd1eb 0%, #00a3e0 16%, #007fb4 28%, #005588 38%, #ffee00 52%, #ffb700 62%, #ff4400 74%, #c10000 85%, #760000 94%, #ffafff 100%); border: 1px solid rgba(255,255,255,.18); }
@@ -159,11 +169,15 @@
 <body>
   <div id="map"></div>
 
-  <!-- Panels ที่จะไม่ถูก Export (ซ่อนปุ่มบังคับต่างๆ) -->
+  <!-- โครงสร้างสำหรับแทรก Windy iframe -->
+  <div id="windyContainer" class="windy-wrapper" data-html2canvas-ignore>
+    <iframe width="100%" height="100%" src="https://embed.windy.com/embed.html?type=map&location=coordinates&metricRain=mm&metricTemp=°C&metricWind=km/h&zoom=6&overlay=rain&product=ecmwf&level=surface&lat=15.4&lon=101.0" frameborder="0"></iframe>
+  </div>
+
   <div class="topbar" data-html2canvas-ignore>
     <div class="brand ui-card">
       <div class="brand-title">🌧 Thailand Weather Dashboard</div>
-      <div class="brand-subtitle">Radar • Satellite • Boundary</div>
+      <div class="brand-subtitle">Radar • Satellite • Forecasts</div>
     </div>
 
     <div class="status-card ui-card">
@@ -194,7 +208,7 @@
 
     <div class="divider"></div>
 
-    <div class="section-title">ชั้นข้อมูลแผนที่</div>
+    <div class="section-title">ชั้นข้อมูลแผนที่ (หลัก)</div>
 
     <div class="layer-row">
       <div class="layer-info">
@@ -218,6 +232,19 @@
         <div class="layer-text"><strong>ขอบเขตจังหวัด</strong><span>77 จังหวัด (เส้นสีดำ)</span></div>
       </div>
       <label class="toggle"><input id="provinceToggle" type="checkbox" checked><span class="slider"></span></label>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section-title">พยากรณ์ล่วงหน้า & แหล่งข้อมูลภายนอก</div>
+    <div class="control-row">
+      <!-- ปุ่มเปิด/ปิด Windy -->
+      <button id="windyToggleBtn" class="primary" style="width: 100%;">☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)</button>
+    </div>
+    <div class="control-row" style="margin-top: 8px;">
+      <!-- ปุ่มลิงก์ภายนอก -->
+      <button onclick="window.open('https://weather.tmd.go.th/', '_blank')" style="flex: 1;">📡 เรดาร์กรมอุตุฯ ↗</button>
+      <button onclick="window.open('https://www.thaiwater.net/', '_blank')" style="flex: 1;">💧 ThaiWater ↗</button>
     </div>
 
     <div class="divider"></div>
@@ -246,20 +273,16 @@
     </div>
     <div id="timeline" class="timeline"></div>
   </section>
-
-  <!-- รายการที่จะติดไปในภาพที่ถูกบันทึก (ไม่มี attribute data-html2canvas-ignore) -->
   
-  <!-- แจ้งเตือนฝนตกหนัก > 50 มม. -->
   <div id="warningPanel" class="warning-panel" style="display: none;">
     <h4 class="warning-title">⚠️ พื้นที่เฝ้าระวังฝนตกหนัก</h4>
     <p style="font-size: 10px; color: #fca5a5; margin: 0 0 6px 0; border-bottom: 1px solid #b91c1c; padding-bottom: 4px;">ปริมาณฝนสะสม > 50 มม.</p>
     <ul class="warning-list" id="warningList">
-      <!-- ข้อมูลจะถูกแทรกที่นี่ -->
+      <!-- ข้อมูล Mock -->
     </ul>
   </div>
 
-  <!-- แถบสีปริมาณฝน (แปลงเป็นมิลลิเมตร) -->
-  <section class="legend-card ui-card">
+  <section id="legendPanel" class="legend-card ui-card">
     <div class="legend-title">ปริมาณฝน (mm/h)</div>
     <div class="legend-bar"></div>
     <div class="legend-labels">
@@ -271,7 +294,6 @@
     </div>
   </section>
 
-  <!-- หน้าจอโหลด -->
   <div id="loading" class="loading">
     <div class="loading-box">
       <div class="spinner"></div>
@@ -320,13 +342,15 @@
       timeline: document.getElementById("timeline"), timelineMeta: document.getElementById("timelineMeta"), 
       loading: document.getElementById("loading"), loadingTitle: document.getElementById("loadingTitle"), 
       loadingMessage: document.getElementById("loadingMessage"), warningPanel: document.getElementById("warningPanel"),
-      warningList: document.getElementById("warningList")
+      warningList: document.getElementById("warningList"), windyToggleBtn: document.getElementById("windyToggleBtn"),
+      windyContainer: document.getElementById("windyContainer"), legendPanel: document.getElementById("legendPanel")
     };
 
     let radarHost = "", radarFrames = [], radarLayers = [], satFrames = [], satLayers = [];
     let selectedIndex = 0, playing = false, playTimer = null, refreshTimer = null;
     let currentOpacity = CONFIG.layerOpacity;
     let provinceData = null, provinceLayer = null, selectedProvinceLayer = null;
+    let isWindyOpen = false;
 
     function setStatus(ok, title, detail) {
       el.statusDot.classList.toggle("error", !ok);
@@ -401,9 +425,7 @@
       }
     }
 
-    // ฟังก์ชันสร้างและอัปเดตแจ้งเตือนฝนตกหนัก > 50 มม. (Mock Data เพื่อการแสดงผลประกอบภาพ)
     function checkHeavyRainWarnings() {
-      // โดยปกติแล้วจะต้องดึง API ข้อมูลจากกรมอุตุฯ ในส่วนนี้จำลองชุดข้อมูลขึ้นมา
       const hasWarning = true; 
       if (hasWarning) {
         el.warningPanel.style.display = "block";
@@ -456,7 +478,7 @@
         selectFrame(selectedIndex); renderTimeline();
         setStatus(true, "ระบบพร้อมใช้งาน", `อัปเดตล่าสุด ${thaiTime(radarFrames[radarFrames.length - 1]?.time)} น.`);
         
-        checkHeavyRainWarnings(); // เรียกฟังก์ชันแสดงการแจ้งเตือน
+        checkHeavyRainWarnings(); 
 
         if (refreshTimer) clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => loadWeatherData(false), CONFIG.refreshMs);
@@ -464,6 +486,24 @@
         setStatus(false, "ข้อผิดพลาด", e.message);
       } finally { if(isLoading) hideLoading(); }
     }
+
+    // Toggle Windy
+    el.windyToggleBtn.onclick = function() {
+      isWindyOpen = !isWindyOpen;
+      if (isWindyOpen) {
+        el.windyContainer.style.display = 'block';
+        el.legendPanel.style.display = 'none'; // ซ่อนแถบสีเรดาร์เดิมเมื่อเปิด Windy
+        this.textContent = '❌ กลับไปใช้แผนที่หลัก (Radar)';
+        this.classList.remove('primary');
+        this.classList.add('danger');
+      } else {
+        el.windyContainer.style.display = 'none';
+        el.legendPanel.style.display = 'block';
+        this.textContent = '☁️ เปิดพยากรณ์ฝนล่วงหน้า (Windy)';
+        this.classList.remove('danger');
+        this.classList.add('primary');
+      }
+    };
 
     // Controls
     el.radarToggle.onchange = () => selectFrame(selectedIndex);
@@ -508,6 +548,10 @@
 
     // บันทึกภาพ
     el.saveBtn.onclick = () => {
+      if (isWindyOpen) {
+        alert("⚠️ ขออภัย: เบราว์เซอร์ไม่อนุญาตให้แคปเจอร์ภาพจากหน้าต่างภายนอก (Windy) กรุณากลับไปใช้หน้าแผนที่หลักก่อนทำการบันทึกภาพครับ");
+        return;
+      }
       showLoading("กำลังสร้างรูปภาพ...", "โปรดรอสักครู่ ระบบกำลังประมวลผลแผนที่");
       setTimeout(() => {
         html2canvas(document.body, { 
