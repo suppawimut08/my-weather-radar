@@ -172,7 +172,7 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     .leaflet-control-attribution { font-size: 8px !important; }
-    .province-tooltip, .district-tooltip { font-weight: 700; font-size: 11px; }
+    .district-tooltip { font-weight: 700; font-size: 11px; }
 
     @media (max-width: 780px) {
       .brand { min-width: 0; padding: 8px 10px; }
@@ -231,7 +231,6 @@
 
   <section id="leftPanel" class="left-panel ui-card" data-html2canvas-ignore>
     
-    <!-- เมนูเลือกรูปแบบแผนที่พื้นหลัง -->
     <div class="section-title">รูปแบบแผนที่พื้นหลัง (Basemap)</div>
     <div class="field" style="margin-top: 0; margin-bottom: 12px;">
       <select id="basemapSelect">
@@ -292,7 +291,7 @@
         <div class="swatch swatch-district"></div>
         <div class="layer-text"><strong>ขอบเขตอำเภอ</strong><span>928 อำเภอ (เส้นประ)</span></div>
       </div>
-      <label class="toggle"><input id="districtToggle" type="checkbox"><span class="slider"></span></label>
+      <label class="toggle"><input id="districtToggle" type="checkbox" checked><span class="slider"></span></label>
     </div>
 
     <div class="divider"></div>
@@ -387,7 +386,6 @@
       defaultCenter: [15.4, 101.0], defaultZoom: 6,
       radarApi: "https://api.rainviewer.com/public/weather-maps.json",
       radarColor: 2, radarOptions: "1_0",
-      satColor: 0, satOptions: "1_0", 
       layerOpacity: 0.72,
       refreshMs: 5 * 60 * 1000,
       provinceGeoJsonUrl: "https://cdn.jsdelivr.net/gh/knottx/opengisdata-thailand@master/provinces.geojson",
@@ -406,13 +404,13 @@
       minZoom: 5, maxZoom: 11, zoomControl: true, preferCanvas: true
     });
 
-    // สร้าง Map Panes จัดการลำดับความลึก
-    map.createPane('satPane');       map.getPane('satPane').style.zIndex = 350; 
-    map.createPane('radarPane');     map.getPane('radarPane').style.zIndex = 360; 
-    map.createPane('districtPane');  map.getPane('districtPane').style.zIndex = 440; // ขอบเขตอำเภอ (อยู่ล่างจังหวัด)
-    map.createPane('boundaryPane');  map.getPane('boundaryPane').style.zIndex = 450; 
+    // สร้าง Map Panes จัดการลำดับความลึก (Z-Index)
+    map.createPane('satPane');       map.getPane('satPane').style.zIndex = 350; // ลึกสุด (เมฆ)
+    map.createPane('radarPane');     map.getPane('radarPane').style.zIndex = 360; // เรดาร์ฝน
+    map.createPane('districtPane');  map.getPane('districtPane').style.zIndex = 440; // ขอบเขตอำเภอ
+    map.createPane('boundaryPane');  map.getPane('boundaryPane').style.zIndex = 450; // ขอบเขตจังหวัด (บนสุด)
 
-    // ข้อมูลแผนที่พื้นหลัง ลบโหมด Dark ออกตามที่แจ้ง
+    // ข้อมูลแผนที่พื้นหลัง
     const BASEMAPS = {
       osm: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap", crossOrigin: true }),
       satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "&copy; Esri", crossOrigin: true }),
@@ -446,8 +444,8 @@
     let radarHost = "", radarFrames = [], radarLayers = [], satFrames = [], satLayers = [];
     let selectedIndex = 0, playing = false, playTimer = null, refreshTimer = null;
     let currentOpacity = CONFIG.layerOpacity;
-    let provinceData = null, provinceLayer = null, selectedProvinceLayer = null;
-    let districtData = null, districtLayer = null;
+    let provinceData = null, provinceLayer = null;
+    let districtData = null, districtLayer = null, selectedDistrictLayer = null;
     let isWindyOpen = false;
 
     el.basemapSelect.onchange = (e) => {
@@ -491,13 +489,23 @@
     function thaiTime(unix) { return new Intl.DateTimeFormat("th-TH", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: "Asia/Bangkok" }).format(new Date(unix * 1000)); }
     function normalizeText(val) { return String(val ?? "").trim().toLocaleLowerCase("th-TH").replace(/\s+/g, ""); }
 
+    // สไตล์เส้นแบ่ง
     function provinceStyle() { return { color: "#000000", weight: 1.5, opacity: 0.85, fillColor: "transparent", fillOpacity: 0 }; }
-    function districtStyle() { return { color: "#64748b", weight: 0.8, opacity: 0.6, fillColor: "transparent", fillOpacity: 0, dashArray: "3 4" }; }
+    function districtStyle() { 
+      return { 
+        color: "#64748b", 
+        weight: el.districtToggle.checked ? 0.8 : 0, // ซ่อนเส้นเมื่อไม่ได้ติ๊ก 
+        opacity: 0.6, 
+        fillColor: "transparent", 
+        fillOpacity: 0.01, // ต้องมีค่า >0 เพื่อให้กดคลิกได้
+        dashArray: "3 4" 
+      }; 
+    }
 
-    function selectProvinceFeature(layer) {
-      if (selectedProvinceLayer) { try { selectedProvinceLayer.setStyle(provinceStyle()); } catch(_) {} }
-      selectedProvinceLayer = layer;
-      layer.setStyle({ color: "#ffffff", weight: 3, fillColor: "#38bdf8", fillOpacity: 0.2 });
+    function selectDistrictFeature(layer) {
+      if (selectedDistrictLayer) { try { selectedDistrictLayer.setStyle(districtStyle()); } catch(_) {} }
+      selectedDistrictLayer = layer;
+      layer.setStyle({ color: "#ffffff", weight: 3, fillColor: "#38bdf8", fillOpacity: 0.2, dashArray: "" });
       if (layer.bringToFront) layer.bringToFront();
     }
 
@@ -505,19 +513,11 @@
       try {
         const response = await fetch(CONFIG.provinceGeoJsonUrl, { cache: "force-cache" });
         provinceData = await response.json();
+        // เส้นจังหวัดจะไม่ Interactive เพื่อให้คลิกทะลุไปโดนอำเภอ
         provinceLayer = L.geoJSON(provinceData, { 
           style: provinceStyle, 
           pane: "boundaryPane",
-          onEachFeature: (feature, layer) => {
-            const p = feature.properties;
-            const nameTh = p.pro_th || p.province_name_th || p.name_th || "";
-            layer.bindTooltip(`<div class="province-tooltip">${nameTh}</div>`, { sticky: true, direction: "top" });
-            layer.on("click", () => {
-                selectProvinceFeature(layer);
-                const opt = [...el.provinceSelect.options].find(o => normalizeText(o.value) === normalizeText(nameTh));
-                if (opt) el.provinceSelect.value = opt.value;
-            });
-          }
+          interactive: false 
         });
         if (el.provinceToggle.checked) provinceLayer.addTo(map);
 
@@ -527,12 +527,6 @@
     }
 
     async function loadDistricts() {
-      if (districtData) {
-        if (el.districtToggle.checked) districtLayer.addTo(map);
-        else map.removeLayer(districtLayer);
-        return;
-      }
-      el.districtToggle.disabled = true;
       try {
         const res = await fetch(CONFIG.districtGeoJsonUrl, { cache: "force-cache" });
         districtData = await res.json();
@@ -541,24 +535,33 @@
           pane: "districtPane",
           onEachFeature: (f, l) => {
             const p = f.properties;
-            const nameTh = p.amp_th || p.district_name_th || p.name_th || "";
-            if (nameTh) {
-              l.bindTooltip(`<div class="district-tooltip">${nameTh}</div>`, { sticky: true, direction: "top", opacity: 0.8 });
+            const ampTh = p.amp_th || p.district_name_th || p.name_th || "";
+            const proTh = p.pro_th || p.province_name_th || "";
+            const fullName = `อำเภอ${ampTh} จ.${proTh}`;
+            
+            if (ampTh) {
+              l.bindTooltip(`<div class="district-tooltip">${fullName}</div>`, { sticky: true, direction: "top" });
+              l.on("click", () => {
+                selectDistrictFeature(l);
+                setStatus(true, "พิกัดปัจจุบัน", fullName);
+              });
             }
           }
         });
-        if (el.districtToggle.checked) districtLayer.addTo(map);
+        // เพิ่มอำเภอลงแผนที่เสมอ (ซ่อน/แสดงด้วย Style Weight แทน)
+        districtLayer.addTo(map);
       } catch(err) { console.error("District Load Error:", err); }
-      el.districtToggle.disabled = false;
     }
 
+    // แก้ไข Radar ให้คมชัดด้วยการดึงภาพ 512px มาใส่ในขนาด 256px (Retina trick)
     function buildRadarLayer(frame) {
-      const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${CONFIG.radarColor}/${CONFIG.radarOptions}.png`;
+      const url = `${radarHost}${frame.path}/512/{z}/{x}/{y}/${CONFIG.radarColor}/${CONFIG.radarOptions}.png`;
       return L.tileLayer(url, { opacity: 0, pane: "radarPane", tileSize: 256, maxNativeZoom: 7, maxZoom: 11, crossOrigin: true });
     }
     
+    // แก้ไข Satellite ให้เรียกใช้ API ที่ถูกต้อง (0/0.png)
     function buildSatLayer(frame) {
-      const url = `${radarHost}${frame.path}/256/{z}/{x}/{y}/${CONFIG.satColor}/${CONFIG.satOptions}.png`;
+      const url = `${radarHost}${frame.path}/512/{z}/{x}/{y}/0/0.png`;
       return L.tileLayer(url, { opacity: 0, pane: "satPane", tileSize: 256, maxNativeZoom: 4, maxZoom: 11, crossOrigin: true });
     }
 
@@ -650,8 +653,18 @@
     el.radarToggle.onchange = () => selectFrame(selectedIndex);
     el.satToggle.onchange = () => selectFrame(selectedIndex);
     el.provinceToggle.onchange = () => { if(provinceLayer) el.provinceToggle.checked ? provinceLayer.addTo(map) : map.removeLayer(provinceLayer); };
-    el.districtToggle.onchange = () => loadDistricts();
+    
+    // อัปเดตเมื่อเปิด/ปิด ขอบเขตอำเภอ
+    el.districtToggle.onchange = () => { 
+      if(districtLayer) {
+        districtLayer.setStyle(districtStyle());
+        if(selectedDistrictLayer) {
+            selectedDistrictLayer.setStyle({ color: "#ffffff", weight: 3, fillColor: "#38bdf8", fillOpacity: 0.2, dashArray: "" });
+        }
+      }
+    };
 
+    // ปุ่มค้นหา/ไปยังจังหวัด (ซูมไปหา แต่ไม่ต้องไฮไลท์เส้น เพราะให้ความสำคัญกับอำเภอแล้ว)
     el.provinceGoBtn.onclick = () => {
       const selected = normalizeText(el.provinceSelect.value);
       if(!selected || !provinceData) return;
@@ -660,8 +673,8 @@
       
       let target; provinceLayer.eachLayer(l => { if(l.feature === feat) target = l; });
       if(target) {
-        selectProvinceFeature(target); map.fitBounds(target.getBounds().pad(0.05), { maxZoom: 10, animate: true });
-        setStatus(true, `พิกัดปัจจุบัน`, feat.properties.pro_th);
+        map.fitBounds(target.getBounds().pad(0.05), { maxZoom: 10, animate: true });
+        setStatus(true, `ไปยังจังหวัด`, feat.properties.pro_th);
       }
     };
 
@@ -722,7 +735,8 @@
     async function init() {
       initVisitorStats();
       showLoading("กำลังเริ่มต้นระบบ...", "เตรียมแผงควบคุมหลัก");
-      await Promise.allSettled([ loadProvinces(), loadWeatherData(false) ]);
+      // โหลดอำเภอมาพร้อมกันเลยเพื่อให้กดได้ตั้งแต่แรก
+      await Promise.allSettled([ loadProvinces(), loadDistricts(), loadWeatherData(false) ]);
       hideLoading();
     }
 
