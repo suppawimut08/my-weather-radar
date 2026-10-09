@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#0b1220" />
-  <title>Thailand Weather Radar & Satellite</title>
+  <title>Thailand Weather Radar Dashboard</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -87,6 +87,18 @@
     .left-panel.collapsed { transform: translateX(calc(-100% - 24px)); opacity: 0; pointer-events: none; }
 
     .section-title { font-size: 13px; font-weight: 850; margin-bottom: 8px; }
+    
+    /* Basemap Thumbnails */
+    .basemap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+    .basemap-item {
+      background: rgba(30, 41, 59, .96); border: 2px solid transparent; border-radius: 10px;
+      padding: 6px; text-align: center; cursor: pointer; transition: 0.2s;
+    }
+    .basemap-item:hover { background: #334155; }
+    .basemap-item.active { border-color: var(--accent2); background: #0f172a; }
+    .basemap-thumb { height: 32px; border-radius: 6px; display: grid; place-items: center; font-size: 16px; margin-bottom: 4px; }
+    .basemap-item span { display: block; font-size: 9px; color: var(--text); }
+
     .search-box { display: flex; gap: 7px; margin-bottom: 9px; }
     .search-box select { min-width: 0; flex: 1; }
 
@@ -123,7 +135,6 @@
 
     .swatch { width: 18px; height: 18px; border-radius: 5px; border: 1px solid rgba(255,255,255,.25); flex: 0 0 auto; }
     .swatch-radar { background: linear-gradient(90deg,#00a3e0,#005588,#ffee00,#ff4400,#c10000,#ffafff); }
-    .swatch-sat { background: linear-gradient(135deg, #cbd5e1 0%, #334155 100%); }
     .swatch-province { background: transparent; border: 2px solid #000000; } 
     .swatch-district { background: transparent; border: 1px dashed #64748b; }
 
@@ -158,11 +169,21 @@
     .stat-item strong { display: block; font-size: 15px; color: var(--accent); font-family: monospace; font-weight: 850; }
     .stat-divider { width: 1px; height: 24px; background: rgba(148,163,184,.2); }
 
+    /* Timeline & Play Button */
     .timeline-card { position: fixed; z-index: 1100; left: 50%; bottom: 13px; transform: translateX(-50%); width: min(930px, calc(100vw - 30px)); border-radius: 15px; padding: 10px 12px 8px; }
     .timeline-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
     .timeline-head strong { font-size: 11px; }
     .timeline-meta { color: var(--muted); font-size: 9px; }
-    .timeline { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+    .timeline-container { display: flex; gap: 8px; align-items: stretch; }
+    .play-timeline-btn {
+      flex: 0 0 auto; background: var(--accent2); color: white; border: none; border-radius: 8px;
+      padding: 0 14px; font-weight: 700; font-size: 11px; cursor: pointer; transition: 0.2s;
+    }
+    .play-timeline-btn:hover { background: #0369a1; }
+    .play-timeline-btn.active { background: var(--danger); }
+    .play-timeline-btn.active:hover { background: #b91c1c; }
+    
+    .timeline { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; flex: 1; }
     .frame-btn { flex: 0 0 auto; min-width: 68px; padding: 6px 8px; font-size: 10px; }
     .frame-btn.selected { background: #0284c7; outline: 2px solid rgba(56,189,248,.28); }
 
@@ -171,7 +192,7 @@
     .spinner { width: 28px; height: 28px; margin: 0 auto 10px; border: 3px solid rgba(255,255,255,.17); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ปรับแต่งสไตล์ Popup ให้สวยงามและชัดเจน */
+    /* ปรับแต่งสไตล์ Popup ให้สวยงาม */
     .leaflet-control-attribution { font-size: 8px !important; }
     .district-tooltip { font-weight: 700; font-size: 11px; }
     .leaflet-popup-content-wrapper { 
@@ -182,8 +203,9 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
     .leaflet-popup-tip { background: rgba(15, 23, 42, 0.95); }
-    .leaflet-popup-content { margin: 12px 16px; line-height: 1.4; }
-    .popup-title { font-family: 'Noto Sans Thai', sans-serif; font-size: 14px; font-weight: 850; color: #38bdf8; text-align: center; margin: 0; }
+    .leaflet-popup-content { margin: 12px 16px; line-height: 1.4; text-align: center; }
+    .popup-title { font-family: 'Noto Sans Thai', sans-serif; font-size: 13px; font-weight: 850; color: #38bdf8; margin: 0 0 4px 0; }
+    .popup-coords { font-size: 10px; color: var(--muted); }
     .leaflet-container a.leaflet-popup-close-button { color: #94a3b8; padding: 4px; }
     .leaflet-container a.leaflet-popup-close-button:hover { color: #f8fafc; }
 
@@ -203,13 +225,15 @@
       .stats-card { right: 7px; bottom: 185px; width: 180px; padding: 8px 10px; }
       .legend-card { right: 7px; bottom: 77px; width: 180px; padding: 8px; }
       .timeline-card { width: calc(100vw - 14px); bottom: 7px; padding: 8px 9px 7px; }
+      
+      .play-timeline-btn { padding: 0 10px; font-size: 10px; white-space: normal; line-height: 1.2; width: 68px;}
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
-  <!-- ลายน้ำบอกเวลาเรดาร์ -->
+  <!-- ลายน้ำบอกเวลาเรดาร์ (ส่วนนี้จะถูกบันทึกลงในรูปภาพด้วย อยู่ขวาล่างเหนือ Scale) -->
   <div id="watermarkTime" class="watermark-time ui-card">
     <span class="label">เวลาเรดาร์</span>
     <span class="value"><span id="wmDate">--</span> <span id="wmTime">--</span></span>
@@ -232,8 +256,8 @@
       <div class="status-card ui-card">
         <div id="statusDot" class="status-dot"></div>
         <div class="status-text">
-          <strong id="statusTitle">กำลังเชื่อมต่อ...</strong>
-          <span id="statusDetail">ระบบปฏิบัติการ</span>
+          <strong id="statusTitle">พิกัดแผนที่ (Location)</strong>
+          <span id="statusDetail">คลิกเพื่อแสดงพิกัด</span>
         </div>
       </div>
       <button id="toggleMenuBtn" class="menu-toggle-btn ui-card" title="ซ่อน/แสดงแถบควบคุม">
@@ -244,13 +268,21 @@
 
   <section id="leftPanel" class="left-panel ui-card" data-html2canvas-ignore>
     
+    <!-- เมนู Thumbnail แผนที่พื้นหลัง -->
     <div class="section-title">รูปแบบแผนที่พื้นหลัง (Basemap)</div>
-    <div class="field" style="margin-top: 0; margin-bottom: 12px;">
-      <select id="basemapSelect">
-        <option value="osm">🗺️ แผนที่ถนน (Street)</option>
-        <option value="satellite">🛰️ ภาพถ่ายดาวเทียม (Satellite)</option>
-        <option value="terrain">⛰️ ภูมิประเทศ (Terrain)</option>
-      </select>
+    <div class="basemap-grid">
+      <div class="basemap-item active" data-map="osm">
+        <div class="basemap-thumb" style="background: #e2e8f0;">🗺️</div>
+        <span>ถนน (Street)</span>
+      </div>
+      <div class="basemap-item" data-map="satellite">
+        <div class="basemap-thumb" style="background: #334155;">🛰️</div>
+        <span>ดาวเทียม (Sat)</span>
+      </div>
+      <div class="basemap-item" data-map="terrain">
+        <div class="basemap-thumb" style="background: #a3e635;">⛰️</div>
+        <span>ภูมิประเทศ</span>
+      </div>
     </div>
     
     <div class="divider"></div>
@@ -273,7 +305,7 @@
 
     <div class="divider"></div>
 
-    <div class="section-title">ชั้นข้อมูลแผนที่ (หลัก)</div>
+    <div class="section-title">ชั้นข้อมูลแผนที่</div>
 
     <div class="layer-row">
       <div class="layer-info">
@@ -281,14 +313,6 @@
         <div class="layer-text"><strong>Radar ฝน (มม./ชม.)</strong><span>ภาพเรดาร์ปริมาณฝน</span></div>
       </div>
       <label class="toggle"><input id="radarToggle" type="checkbox" checked><span class="slider"></span></label>
-    </div>
-
-    <div class="layer-row">
-      <div class="layer-info">
-        <div class="swatch swatch-sat"></div>
-        <div class="layer-text"><strong>เมฆดาวเทียม IR</strong><span>ภาพอินฟราเรด (RainViewer)</span></div>
-      </div>
-      <label class="toggle"><input id="satToggle" type="checkbox"><span class="slider"></span></label>
     </div>
 
     <div class="layer-row">
@@ -329,8 +353,7 @@
 
     <div class="section-title">การควบคุมระบบ</div>
     <div class="control-row">
-      <button id="playBtn" class="primary">▶ เล่น Animation</button>
-      <button id="refreshBtn">↻ รีเฟรช</button>
+      <button id="refreshBtn">↻ รีเฟรชข้อมูล</button>
       <button id="homeBtn">⌂ ทั้งประเทศ</button>
       <button id="saveBtn" class="success">📸 บันทึกภาพ</button>
     </div>
@@ -340,23 +363,25 @@
       <input id="speedSlider" type="range" min="200" max="2500" step="100" value="1500" />
     </div>
 
-    <div class="time-big" id="currentTime">--:--</div>
-    <div class="time-small" id="currentDate">--</div>
-
     <div class="field">
       <label><span>ความโปร่งใส (Opacity)</span><span id="opacityValue">72%</span></label>
       <input id="opacitySlider" type="range" min="0" max="100" value="72" />
     </div>
   </section>
 
+  <!-- ปรับ Timeline ใหม่ โดยย้ายปุ่มเล่นมาไว้ด้านหน้าสุด -->
   <section class="timeline-card ui-card" data-html2canvas-ignore>
     <div class="timeline-head">
-      <strong>Timeline</strong>
+      <strong>Timeline เรดาร์</strong>
       <span id="timelineMeta" class="timeline-meta">กำลังโหลด...</span>
     </div>
-    <div id="timeline" class="timeline"></div>
+    <div class="timeline-container">
+      <button id="playBtn" class="play-timeline-btn">▶ เล่นภาพเรดาร์เคลื่อนไหว</button>
+      <div id="timeline" class="timeline"></div>
+    </div>
   </section>
 
+  <!-- สถิติการเยี่ยมชม (ไม่ติดในรูปภาพ) -->
   <section class="stats-card ui-card" data-html2canvas-ignore="true">
     <div class="stats-header">📊 สถิติผู้ใช้งาน</div>
     <div class="stats-row">
@@ -398,7 +423,6 @@
       defaultCenter: [15.4, 101.0], defaultZoom: 6,
       radarApi: "https://api.rainviewer.com/public/weather-maps.json",
       radarColor: 2, radarOptions: "1_0",
-      satColor: 0, satOptions: "1_0", 
       layerOpacity: 0.72,
       refreshMs: 5 * 60 * 1000,
       provinceGeoJsonUrl: "https://cdn.jsdelivr.net/gh/knottx/opengisdata-thailand@master/provinces.geojson",
@@ -417,11 +441,12 @@
       minZoom: 5, maxZoom: 11, zoomControl: true, preferCanvas: true
     });
 
-    map.createPane('satPane');       map.getPane('satPane').style.zIndex = 350; 
+    // สร้าง Map Panes จัดการลำดับความลึก (Z-Index)
     map.createPane('radarPane');     map.getPane('radarPane').style.zIndex = 360; 
     map.createPane('districtPane');  map.getPane('districtPane').style.zIndex = 440; 
     map.createPane('boundaryPane');  map.getPane('boundaryPane').style.zIndex = 450; 
 
+    // ข้อมูลแผนที่พื้นหลัง
     const BASEMAPS = {
       osm: L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap", crossOrigin: true }),
       satellite: L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 19, attribution: "&copy; Esri", crossOrigin: true }),
@@ -435,11 +460,9 @@
       statusDot: document.getElementById("statusDot"), statusTitle: document.getElementById("statusTitle"),
       statusDetail: document.getElementById("statusDetail"), provinceSelect: document.getElementById("provinceSelect"),
       provinceGoBtn: document.getElementById("provinceGoBtn"), radarToggle: document.getElementById("radarToggle"),
-      satToggle: document.getElementById("satToggle"), provinceToggle: document.getElementById("provinceToggle"), 
-      districtToggle: document.getElementById("districtToggle"),
+      provinceToggle: document.getElementById("provinceToggle"), districtToggle: document.getElementById("districtToggle"),
       playBtn: document.getElementById("playBtn"), refreshBtn: document.getElementById("refreshBtn"), 
       homeBtn: document.getElementById("homeBtn"), saveBtn: document.getElementById("saveBtn"), 
-      currentTime: document.getElementById("currentTime"), currentDate: document.getElementById("currentDate"), 
       opacitySlider: document.getElementById("opacitySlider"), opacityValue: document.getElementById("opacityValue"), 
       speedSlider: document.getElementById("speedSlider"), speedValue: document.getElementById("speedValue"),
       timeline: document.getElementById("timeline"), timelineMeta: document.getElementById("timelineMeta"), 
@@ -449,22 +472,34 @@
       leftPanel: document.getElementById("leftPanel"), toggleMenuBtn: document.getElementById("toggleMenuBtn"),
       todayVisits: document.getElementById("todayVisits"), totalVisits: document.getElementById("totalVisits"),
       wmDate: document.getElementById("wmDate"), wmTime: document.getElementById("wmTime"), watermarkTime: document.getElementById("watermarkTime"),
-      basemapSelect: document.getElementById("basemapSelect")
+      basemapItems: document.querySelectorAll(".basemap-item")
     };
 
-    let radarHost = "", radarFrames = [], radarLayers = [], satFrames = [], satLayers = [];
+    let radarHost = "", radarFrames = [], radarLayers = [];
     let selectedIndex = 0, playing = false, playTimer = null, refreshTimer = null;
     let currentOpacity = CONFIG.layerOpacity;
     let provinceData = null, provinceLayer = null;
     let districtData = null, districtLayer = null, selectedDistrictLayer = null;
     let isWindyOpen = false;
 
-    el.basemapSelect.onchange = (e) => {
-      map.removeLayer(currentBasemap);
-      currentBasemap = BASEMAPS[e.target.value];
-      currentBasemap.addTo(map);
-      currentBasemap.bringToBack();
-    };
+    // ระบบอัปเดตกล่องสถานะ (Lat/Lon)
+    map.on('click', function(e) {
+      const lat = e.latlng.lat.toFixed(4);
+      const lng = e.latlng.lng.toFixed(4);
+      setStatus(true, "พิกัดแผนที่ (Location)", `Lat: ${lat}, Lon: ${lng}`);
+    });
+
+    // Thumbnail แผนที่พื้นหลัง
+    el.basemapItems.forEach(item => {
+      item.onclick = () => {
+        el.basemapItems.forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        map.removeLayer(currentBasemap);
+        currentBasemap = BASEMAPS[item.dataset.map];
+        currentBasemap.addTo(map);
+        currentBasemap.bringToBack();
+      };
+    });
 
     function initVisitorStats() {
       let total = localStorage.getItem("weather_total_visits");
@@ -527,10 +562,11 @@
       try {
         const response = await fetch(CONFIG.provinceGeoJsonUrl, { cache: "force-cache" });
         provinceData = await response.json();
+        // เส้นจังหวัดจะไม่ Interactive เพื่อให้คลิกทะลุไปโดนอำเภอ
         provinceLayer = L.geoJSON(provinceData, { 
           style: provinceStyle, 
           pane: "boundaryPane",
-          interactive: false // ให้คลิกทะลุไปโดนอำเภอ
+          interactive: false 
         });
         if (el.provinceToggle.checked) provinceLayer.addTo(map);
 
@@ -549,16 +585,31 @@
           interactive: true,
           onEachFeature: (f, l) => {
             const p = f.properties;
-            const ampTh = p.amp_th || p.district_name_th || p.name_th || p.AMP_NAM_T || p.AMP_T || "";
-            const proTh = p.pro_th || p.province_name_th || p.PROV_NAM_T || p.PROV_T || "";
+            // ดักจับชื่อตัวแปรที่ถูกต้องของไฟล์ GeoJSON: A_NAME_TH และ P_NAME_TH
+            const ampTh = p.A_NAME_TH || p.amp_th || p.district_name_th || p.name_th || p.AMP_NAM_T || p.AMP_T || "";
+            const proTh = p.P_NAME_TH || p.pro_th || p.province_name_th || p.PROV_NAM_T || p.PROV_T || "";
             
             if (ampTh) {
               const fullName = `อำเภอ${ampTh} จ.${proTh}`;
+              
+              // เพิ่ม Tooltip
               l.bindTooltip(`<div class="district-tooltip">${fullName}</div>`, { sticky: true, direction: "top" });
-              l.bindPopup(`<div class="popup-title">${fullName}</div>`, { closeButton: false, offset: [0, -5] });
+              
+              // เพิ่ม Popup ที่แสดงตำแหน่งพิกัด
+              l.bindPopup(function(layer) {
+                const center = layer.getBounds().getCenter();
+                const latStr = center.lat.toFixed(4);
+                const lngStr = center.lng.toFixed(4);
+                return `<div class="popup-title">${fullName}</div><div class="popup-coords">พิกัด: ${latStr}, ${lngStr}</div>`;
+              }, { closeButton: false, offset: [0, -5] });
+              
+              // Event เมื่อคลิกอำเภอ
               l.on("click", (e) => {
                 selectDistrictFeature(l);
-                setStatus(true, "พิกัดปัจจุบัน", fullName);
+                const latStr = e.latlng.lat.toFixed(4);
+                const lngStr = e.latlng.lng.toFixed(4);
+                setStatus(true, fullName, `Lat: ${latStr}, Lon: ${lngStr}`);
+                l.openPopup(); 
               });
             }
           }
@@ -570,11 +621,6 @@
     function buildRadarLayer(frame) {
       const url = `${radarHost}${frame.path}/512/{z}/{x}/{y}/${CONFIG.radarColor}/${CONFIG.radarOptions}.png`;
       return L.tileLayer(url, { opacity: 0, pane: "radarPane", tileSize: 256, maxNativeZoom: 7, maxZoom: 11, crossOrigin: true });
-    }
-    
-    function buildSatLayer(frame) {
-      const url = `${radarHost}${frame.path}/512/{z}/{x}/{y}/0/0.png`;
-      return L.tileLayer(url, { opacity: 0, pane: "satPane", tileSize: 256, maxNativeZoom: 4, maxZoom: 11, crossOrigin: true });
     }
 
     function renderTimeline() {
@@ -595,27 +641,17 @@
         const dateStr = thaiDate(radarFrames[selectedIndex].time);
         const timeStr = thaiTime(radarFrames[selectedIndex].time) + ' น.';
         
-        el.currentTime.textContent = timeStr; el.currentDate.textContent = dateStr;
-        el.wmDate.textContent = dateStr; el.wmTime.textContent = timeStr;
+        el.wmDate.textContent = dateStr; 
+        el.wmTime.textContent = timeStr;
       }
     }
 
     function selectFrame(index) {
       if (!radarFrames.length) return;
       selectedIndex = Math.max(0, Math.min(index, radarFrames.length - 1));
-      const targetTime = radarFrames[selectedIndex].time;
-      
-      let bestSatIdx = 0, minDiff = Infinity;
-      if (satFrames.length > 0) {
-        satFrames.forEach((sf, i) => { const diff = Math.abs(sf.time - targetTime); if (diff < minDiff) { minDiff = diff; bestSatIdx = i; } });
-      }
 
       radarLayers.forEach((layer, idx) => {
         const show = idx === selectedIndex && el.radarToggle.checked;
-        layer.setOpacity(show ? currentOpacity : 0);
-      });
-      satLayers.forEach((layer, idx) => {
-        const show = idx === bestSatIdx && el.satToggle.checked;
         layer.setOpacity(show ? currentOpacity : 0);
       });
 
@@ -630,19 +666,14 @@
         const data = await res.json();
         radarHost = data.host;
         radarFrames = (data.radar?.past || []).slice().sort((a,b) => a.time - b.time);
-        if (data.satellite && data.satellite.infrared) satFrames = data.satellite.infrared.slice().sort((a,b) => a.time - b.time);
 
-        radarLayers.forEach(l => map.removeLayer(l)); satLayers.forEach(l => map.removeLayer(l));
-        
+        radarLayers.forEach(l => map.removeLayer(l));
         radarLayers = radarFrames.map(f => buildRadarLayer(f));
-        satLayers = satFrames.map(f => buildSatLayer(f));
-
         radarLayers.forEach(l => l.addTo(map));
-        satLayers.forEach(l => l.addTo(map));
         
         selectedIndex = Math.max(0, radarFrames.length - 1);
         selectFrame(selectedIndex); renderTimeline();
-        setStatus(true, "ระบบพร้อมใช้งาน", `อัปเดตล่าสุด ${thaiTime(radarFrames[radarFrames.length - 1]?.time)} น.`);
+        setStatus(true, "พิกัดแผนที่ (Location)", `คลิกเพื่อแสดงพิกัด`);
 
         if (refreshTimer) clearTimeout(refreshTimer);
         refreshTimer = setTimeout(() => loadWeatherData(false), CONFIG.refreshMs);
@@ -663,7 +694,6 @@
     };
 
     el.radarToggle.onchange = () => selectFrame(selectedIndex);
-    el.satToggle.onchange = () => selectFrame(selectedIndex);
     el.provinceToggle.onchange = () => { if(provinceLayer) el.provinceToggle.checked ? provinceLayer.addTo(map) : map.removeLayer(provinceLayer); };
     
     // อัปเดตเมื่อเปิด/ปิด ขอบเขตอำเภอ
@@ -685,26 +715,38 @@
       let target; provinceLayer.eachLayer(l => { if(l.feature === feat) target = l; });
       if(target) {
         map.fitBounds(target.getBounds().pad(0.05), { maxZoom: 10, animate: true });
-        setStatus(true, `พิกัดปัจจุบัน`, feat.properties.pro_th);
+        const center = target.getBounds().getCenter();
+        setStatus(true, `จังหวัด${feat.properties.pro_th}`, `Lat: ${center.lat.toFixed(4)}, Lon: ${center.lng.toFixed(4)}`);
       }
     };
 
-    el.homeBtn.onclick = () => { map.setView(CONFIG.defaultCenter, CONFIG.defaultZoom, { animate: true }); };
+    el.homeBtn.onclick = () => { map.setView(CONFIG.defaultCenter, CONFIG.defaultZoom, { animate: true }); setStatus(true, "มุมมองทั้งประเทศ", "คลิกเพื่อแสดงพิกัด"); };
     
     el.playBtn.onclick = () => {
       if(!radarFrames.length) return;
       playing = !playing;
-      el.playBtn.textContent = playing ? "⏸ หยุด" : "▶ เล่น Animation";
       if(playing) {
+        el.playBtn.innerHTML = "⏸ หยุดภาพเคลื่อนไหว";
+        el.playBtn.classList.add("active");
         const speed = Number(el.speedSlider.value) || 1500;
         playTimer = setInterval(() => { selectedIndex = (selectedIndex + 1) % radarFrames.length; selectFrame(selectedIndex); }, speed);
-      } else clearInterval(playTimer);
+      } else {
+        el.playBtn.innerHTML = "▶ เล่นภาพเรดาร์เคลื่อนไหว";
+        el.playBtn.classList.remove("active");
+        clearInterval(playTimer);
+      }
     };
 
     el.refreshBtn.onclick = () => { if(playing) el.playBtn.click(); loadWeatherData(true); };
 
     document.querySelectorAll(".quick-btn").forEach(btn => {
-      btn.onclick = () => { const p = QUICK_PLACES[btn.dataset.place]; if(p) { map.setView(p.center, p.zoom, { animate: true }); setStatus(true, "ตำแหน่ง", p.name); } };
+      btn.onclick = () => { 
+        const p = QUICK_PLACES[btn.dataset.place]; 
+        if(p) { 
+          map.setView(p.center, p.zoom, { animate: true }); 
+          setStatus(true, `ปุ่มลัด: ${p.name}`, `Lat: ${p.center[0].toFixed(4)}, Lon: ${p.center[1].toFixed(4)}`); 
+        } 
+      };
     });
 
     el.opacitySlider.oninput = e => {
